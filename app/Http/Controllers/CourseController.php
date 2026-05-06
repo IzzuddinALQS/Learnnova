@@ -7,24 +7,38 @@ use Illuminate\Http\Request;
 
 class CourseController extends Controller
 {
-    /**
-     * Display a listing of courses
-     */
     public function index()
     {
-        $courses = Course::with('instructor')->latest()->paginate(12);
-        return view('courses.index', compact('courses'));
+        // TODO: implementasi oleh tim
     }
 
-    public function create() {}
+    public function create()
+    {
+        // TODO: implementasi oleh tim
+    }
 
-    public function store(Request $request) {}
+    public function store(Request $request)
+    {
+        // TODO: implementasi oleh tim
+    }
 
-    public function show(string $id) {}
+    public function show(string $id)
+    {
+        // TODO: implementasi oleh tim
+    }
 
-    public function edit(string $id) {}
+    public function edit(string $id)
+    {
+        // TODO: implementasi oleh tim
+    }
 
-    public function update(Request $request, string $id) {}
+    public function update(Request $request, string $id)
+    {
+        // TODO: implementasi oleh tim
+    }
 
-    public function destroy(string $id) {}
+    public function destroy(string $id)
+    {
+        // TODO: implementasi oleh tim
+    }
 }

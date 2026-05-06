@@ -13,6 +13,40 @@ use Illuminate\Support\Facades\Storage;
 class ForumController extends Controller
 {
     /**
+     * Global forum — semua thread dari semua kelas
+     */
+    public function globalIndex(Request $request)
+    {
+        if (!Auth::user()->hasPermission('forum.view')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $filter   = $request->get('filter', 'all');
+        $courseId = $request->get('course');
+
+        $query = ForumThread::with(['user', 'course'])
+            ->withCount('posts');
+
+        // Filter per kelas
+        if ($courseId) {
+            $query->where('course_id', $courseId);
+        }
+
+        switch ($filter) {
+            case 'popular': $query->orderBy('views', 'desc'); break;
+            case 'recent':  $query->orderBy('updated_at', 'desc'); break;
+            case 'pinned':  $query->where('is_pinned', true)->orderBy('updated_at', 'desc'); break;
+            default:
+                $query->orderBy('is_pinned', 'desc')->orderBy('updated_at', 'desc');
+        }
+
+        $threads = $query->paginate(20);
+        $courses = Course::orderBy('title')->get();
+
+        return view('forum.global', compact('threads', 'courses', 'filter', 'courseId'));
+    }
+
+    /**
      * Display a listing of threads for a course
      */
     public function index(Request $request, $courseId)
