@@ -185,12 +185,14 @@
                 </li>
 
                 <!-- Forum -->
+                @if(auth()->check() && auth()->user()->hasPermission('forum.view'))
                 <li class="nav-item">
-                    <a href="{{ url('/forum') }}" class="nav-link {{ request()->is('forum*') ? 'active' : '' }}">
+                    <a href="{{ route('courses.index') }}" class="nav-link {{ request()->is('courses/*/forum*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-comments"></i>
                         <p>Forum Diskusi</p>
                     </a>
                 </li>
+                @endif
 
                 <li class="nav-header">INFORMASI</li>
 

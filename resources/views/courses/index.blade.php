@@ -1,11 +1,13 @@
 @extends('main')
-@section('title', 'Catalog Course')
+
+@section('title', 'Daftar Kelas')
+
 @section('content')
 <div class="content-header">
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1 class="m-0">Katalog Kelas</h1>
+                <h1 class="m-0">Daftar Kelas</h1>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
@@ -16,121 +18,47 @@
         </div>
     </div>
 </div>
-<section>
 
-<div class="container mt-4">
-  <div class="row g-4">
+<section class="content">
+    <div class="container-fluid">
 
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <img src="/img/images.jpg"
-             class="card-img-top"
-             style="height: 180px; object-fit: cover;">
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title">Bahasa Arab Muhadatsah (Percakapan)</h5>
-          <p class="card-text">
-            Mempelajari dasar percakapan Bahasa Arab (muhadatsah), mulai dari salam, perkenalan, kosakata sehari-hari..
-          </p>
-
-          <div class="mt-auto">
-            <a href="#" class="btn btn-primary w-100">Lihat Kelas</a>
-          </div>
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Pilih Kelas untuk Akses Forum</h3>
+            </div>
+            <div class="card-body">
+                @forelse($courses as $course)
+                <div class="d-flex align-items-center p-3 border-bottom">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-0">{{ $course->title }}</h6>
+                        <small class="text-muted">
+                            <i class="fas fa-chalkboard-teacher mr-1"></i>
+                            {{ $course->instructor->name ?? '-' }}
+                        </small>
+                    </div>
+                    <div>
+                        @if(auth()->user()->hasPermission('forum.view'))
+                        <a href="{{ route('forum.index', $course->id) }}"
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-comments mr-1"></i>Forum
+                        </a>
+                        @endif
+                    </div>
+                </div>
+                @empty
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-chalkboard fa-3x mb-3 d-block"></i>
+                    Belum ada kelas tersedia.
+                </div>
+                @endforelse
+            </div>
+            @if($courses->hasPages())
+            <div class="card-footer">
+                {{ $courses->links() }}
+            </div>
+            @endif
         </div>
-      </div>
+
     </div>
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <img src="/img/belajar-bahasa-arab.jpg"
-             class="card-img-top"
-             style="height: 180px; object-fit: cover;">
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title">Belajar Dasar Bahasa Arab Qur’ani</h5>
-          <p class="card-text">
-            Mempelajari dasar-dasar Bahasa Arab Qur’ani, mulai dari pengenalan huruf hijaiyah, kosakata dalam Al-Qur’an...
-          </p>
-          <div class="mt-auto">
-            <a href="#" class="btn btn-primary w-100">Lihat Kelas</a>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <img src="/img/bahasa.jpg"
-             class="card-img-top"
-             style="height: 180px; object-fit: cover;">
-
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title">Belajar Bahasa Inggris Beginner</h5>
-          <p class="card-text">
-            Mempelajari dasar-dasar Bahasa Inggris untuk pemula, mulai dari kosakata dasar, tata bahasa sederhana, hingga kemampuan..
-          </p>
-
-          <div class="mt-auto">
-            <a href="#" class="btn btn-primary w-100">Lihat Kelas</a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <img src="/img/Matematika.jpg"
-             class="card-img-top"
-             style="height: 180px; object-fit: cover;">
-
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title">Matematika Diskrit</h5>
-          <p class="card-text">
-            Mempelajari konsep dasar matematika diskrit seperti logika, himpunan, relasi, fungsi, kombinatorika, dan graf..
-          </p>
-
-          <div class="mt-auto">
-            <a href="#" class="btn btn-primary w-100">Lihat Kelas</a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <img src="/img/Ipa.png"
-             class="card-img-top"
-             style="height: 180px; object-fit: cover;">
-
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title">Ilmu Pengetahuan Alam</h5>
-          <p class="card-text">
-            Mempelajari konsep dasar Ilmu Pengetahuan Alam yang mencakup fisika, kimia, dan biologi, mulai dari pengenalan fenomena alam, materi, energi
-          </p>
-          <div class="mt-auto">
-            <a href="#" class="btn btn-primary w-100">Lihat Kelas</a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-4 mb-4">
-      <div class="card h-100">
-        <img src="/img/bahasa.jpg"
-             class="card-img-top"
-             style="height: 180px; object-fit: cover;">
-
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title">Belajar Bahasa Inggris Beginner</h5>
-          <p class="card-text">
-            Mempelajari dasar-dasar Bahasa Inggris untuk pemula, mulai dari kosakata dasar, tata bahasa sederhana, hingga kemampuan..
-          </p>
-
-          <div class="mt-auto">
-            <a href="#" class="btn btn-primary w-100">Lihat Kelas</a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
 </section>
 @endsection

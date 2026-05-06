@@ -2,87 +2,29 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Permission;
-use App\Models\Role;
+use App\Models\Course;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class CourseController extends Controller
 {
+    /**
+     * Display a listing of courses
+     */
     public function index()
     {
-        return view('courses.index');
+        $courses = Course::with('instructor')->latest()->paginate(12);
+        return view('courses.index', compact('courses'));
     }
 
-    public function create()
-    {
-        $permissions = Permission::orderBy('module')->orderBy('name')->get()->groupBy('module');
-        return view('roles.form', compact('permissions'));
-    }
+    public function create() {}
 
-    public function store(Request $request)
-    {
-        $validator = validator($request->all(), [
-            'name'          => 'required|string|max:125|unique:roles,name',
-            'description'   => 'nullable|string|max:255',
-            'permissions'   => 'nullable|array',
-            'permissions.*' => 'exists:permissions,id',
-        ]);
+    public function store(Request $request) {}
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+    public function show(string $id) {}
 
-        $role = Role::create([
-            'name'        => $request->name,
-            'guard_name'  => 'web',
-            'description' => $request->description,
-        ]);
+    public function edit(string $id) {}
 
-        $role->permissions()->sync($request->permissions ?? []);
+    public function update(Request $request, string $id) {}
 
-        return response()->json([
-            'message'  => 'Role berhasil ditambahkan.',
-            'redirect' => route('roles.index'),
-        ]);
-    }
-
-    public function edit(Role $role)
-    {
-        $permissions = Permission::orderBy('module')->orderBy('name')->get()->groupBy('module');
-        $role->load('permissions');
-        return view('roles.form', compact('role', 'permissions'));
-    }
-
-    public function update(Request $request, Role $role)
-    {
-        $validator = validator($request->all(), [
-            'name'          => ['required', 'string', 'max:125', Rule::unique('roles')->ignore($role->id)],
-            'description'   => 'nullable|string|max:255',
-            'permissions'   => 'nullable|array',
-            'permissions.*' => 'exists:permissions,id',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $role->update([
-            'name'        => $request->name,
-            'description' => $request->description,
-        ]);
-
-        $role->permissions()->sync($request->permissions ?? []);
-
-        return response()->json([
-            'message'  => 'Role berhasil diupdate.',
-            'redirect' => route('roles.index'),
-        ]);
-    }
-
-    public function destroy(Role $role)
-    {
-        $role->delete();
-        return response()->json(['message' => 'Role berhasil dihapus.']);
-    }
+    public function destroy(string $id) {}
 }

@@ -36,4 +36,19 @@ class User extends Authenticatable
     {
         return $this->roles()->where('name', $role)->exists();
     }
+
+    /**
+     * Check if user has a specific permission via their roles
+     */
+    public function hasPermission(string $permission): bool
+    {
+        // super_admin has all permissions
+        if ($this->hasRole('super_admin')) {
+            return true;
+        }
+
+        return $this->roles()
+            ->whereHas('permissions', fn($q) => $q->where('name', $permission))
+            ->exists();
+    }
 }
