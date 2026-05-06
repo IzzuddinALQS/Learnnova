@@ -26,8 +26,6 @@ Route::middleware('auth')->group(function () {
     Route::resource('users', UserController::class);
     Route::resource('roles', RoleController::class);
     Route::resource('courses', CourseController::class);
-    Route::resource('syllabus', SyllabusController::class);
-
     // Forum routes (nested under courses)
     Route::prefix('courses/{course}')->name('forum.')->group(function () {
         Route::get('forum', [ForumController::class, 'index'])->name('index');
@@ -44,4 +42,5 @@ Route::middleware('auth')->group(function () {
         Route::post('forum/{thread}/posts/{post}/solution', [ForumController::class, 'markSolution'])->name('markSolution');
         Route::delete('forum/{thread}/posts/{post}/solution', [ForumController::class, 'unmarkSolution'])->name('unmarkSolution');
     });
+    Route::resource('syllabus', SyllabusController::class);
 });
