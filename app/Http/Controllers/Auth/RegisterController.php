@@ -32,7 +32,7 @@ class RegisterController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        // 3. Langsung Login setelah daftar (opsional)
+        // 3. Langsung Login setelah daftar
         Auth::login($user);
 
         // 4. Redirect ke Dashboard
