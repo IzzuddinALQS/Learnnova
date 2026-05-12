@@ -11,6 +11,7 @@ use App\Http\Controllers\SyllabusController;
 use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\CourseModuleController;
 use App\Http\Controllers\MaterialController;
+use App\Http\Controllers\ScheduleController;
 use Illuminate\Support\Facades\Route;
 
 // Auth
@@ -34,6 +35,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('courses', CourseController::class);
     Route::resource('syllabus', SyllabusController::class);
     Route::resource('assignments', AssignmentController::class);
+    Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
 
     // Forum global (langsung dari sidebar)
     Route::get('/forum', [ForumController::class, 'globalIndex'])->name('forum.global');

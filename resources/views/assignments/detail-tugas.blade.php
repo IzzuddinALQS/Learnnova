@@ -10,7 +10,7 @@
                 <h1 class="m-0 font-weight-bold">Detail Tugas</h1>
             </div>
             <div class="col-sm-6 text-right">
-                <a href="{{ route('detail-kelas.index') }}" class="btn btn-outline-secondary rounded-pill btn-sm"><i class="fas fa-arrow-left mr-1"></i> Kembali ke Kelas</a>
+                <a href="{{ route('assignments.index') }}" class="btn btn-outline-secondary rounded-pill btn-sm"><i class="fas fa-arrow-left mr-1"></i> Kembali</a>
             </div>
         </div>
     </div>
