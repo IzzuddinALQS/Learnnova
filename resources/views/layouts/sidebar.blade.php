@@ -142,15 +142,23 @@
                 </li>
 
                 {{-- PERSONAL --}}
-                <li class="nav-header">PERSONAL</li>
+<li class="nav-header">PERSONAL</li>
 
-                <li class="nav-item">
-                    <a href="{{ url('/certificates') }}"
-                       class="nav-link {{ request()->is('certificates*') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-certificate"></i>
-                        <p>Sertifikat Saya</p>
-                    </a>
-                </li>
+<li class="nav-item">
+    <a href="{{ url('/profile') }}"
+       class="nav-link {{ request()->is('profile*') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-user-circle"></i>
+        <p>profile</p>
+    </a>
+</li>
+
+<li class="nav-item">
+    <a href="{{ url('/certificates') }}"
+       class="nav-link {{ request()->is('certificates*') ? 'active' : '' }}">
+        <i class="nav-icon fas fa-certificate"></i>
+        <p>Sertifikat Saya</p>
+    </a>
+</li>
 
                 {{-- ADMINISTRASI — super_admin --}}
                 @if(auth()->check() && auth()->user()->hasRole('super_admin'))

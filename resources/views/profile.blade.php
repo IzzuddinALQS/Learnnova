@@ -1,164 +1,156 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Profile</title>
+@extends('main')
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+@section('content')
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<div class="content-wrapper ml-0">
 
-</head>
+    <div class="content-header">
+        <h1>Profile</h1>
+    </div>
 
-<body class="hold-transition sidebar-mini">
+    <section class="content">
 
-<div class="wrapper">
+        <div class="container-fluid px-3">
 
-    <div class="content-wrapper p-4">
+            <div class="row">
 
-        <div class="content-header">
-            <h1>Profile</h1>
-        </div>
+                {{-- LEFT PROFILE --}}
+                <div class="col-md-4">
 
-        <section class="content">
+                    <div class="card card-primary card-outline">
 
-            <div class="container-fluid">
+                        <div class="card-body box-profile text-center">
 
-                <div class="row">
+                            <img
+                                class="profile-user-img img-fluid img-circle"
+                                src="https://i.pravatar.cc/150"
+                            >
 
-                    {{-- LEFT PROFILE --}}
-                    <div class="col-md-4">
+                            <h3 class="profile-username mt-3">
+                                Budi Sulistiyo
+                            </h3>
 
-                        <div class="card card-primary card-outline">
-
-                            <div class="card-body box-profile text-center">
-
-                                <img
-                                    class="profile-user-img img-fluid img-circle"
-                                    src="https://i.pravatar.cc/150"
-                                >
-
-                                <h3 class="profile-username mt-3">
-                                    Budi Sulistiyo
-                                </h3>
-
-                                <p class="text-muted">
-                                    Fullstack Developer
-                                </p>
-
-                            </div>
+                            <p class="text-muted">
+                                Fullstack Developer
+                            </p>
 
                         </div>
 
                     </div>
 
-                    {{-- RIGHT FORM --}}
-                    <div class="col-md-8">
+                </div>
 
-                        <div class="card">
+                {{-- RIGHT FORM --}}
+                <div class="col-md-8">
 
-                            <div class="card-header bg-primary">
-                                <h3 class="card-title">
-                                    Setting Form
-                                </h3>
-                            </div>
+                    <div class="card">
 
-                            <div class="card-body">
+                        <div class="card-header bg-primary">
+                            <h3 class="card-title">
+                                Setting Form
+                            </h3>
+                        </div>
 
-                                <form
-                                    action="/profile/update"
-                                    method="POST"
-                                    enctype="multipart/form-data"
-                                >
+                        <div class="card-body">
 
-                                    @csrf
+<form
+    action="/profile/update"
+    method="POST"
+    enctype="multipart/form-data"
+>
 
-                                    {{-- NAME --}}
-                                    <div class="form-group mb-3">
-                                        <label>Nama Lengkap</label>
+    @csrf
 
-                                        <input
-                                            type="text"
-                                            name="name"
-                                            class="form-control"
-                                            required
-                                        >
-                                    </div>
+    {{-- NAME --}}
+    <div class="form-group mb-3">
+        <label>Nama Lengkap</label>
 
-                                    {{-- EMAIL --}}
-                                    <div class="form-group mb-3">
-                                        <label>Email</label>
+        <input
+            type="text"
+            name="name"
+            class="form-control"
+            value="{{ auth()->user()->name }}"
+            required
+        >
+    </div>
 
-                                        <input
-                                            type="email"
-                                            name="email"
-                                            class="form-control"
-                                            required
-                                        >
-                                    </div>
+    {{-- EMAIL --}}
+    <div class="form-group mb-3">
+        <label>Email</label>
 
-                                    {{-- PHONE --}}
-                                    <div class="form-group mb-3">
-                                        <label>No HP</label>
+        <input
+            type="email"
+            name="email"
+            class="form-control"
+            value="{{ auth()->user()->email }}"
+            required
+        >
+    </div>
 
-                                        <input
-                                            type="text"
-                                            name="phone"
-                                            class="form-control"
-                                        >
-                                    </div>
+    {{-- PHONE --}}
+    <div class="form-group mb-3">
+        <label>No HP</label>
 
-                                    {{-- BIO --}}
-                                    <div class="form-group mb-3">
-                                        <label>Bio</label>
+        <input
+            type="text"
+            name="phone"
+            class="form-control"
+            placeholder="08xxxxxxxxxx"
+        >
+    </div>
 
-                                        <textarea
-                                            name="bio"
-                                            class="form-control"
-                                            rows="4"
-                                        ></textarea>
-                                    </div>
+    {{-- BIO --}}
+    <div class="form-group mb-3">
+        <label>Bio</label>
 
-                                    {{-- AVATAR --}}
-                                    <div class="form-group mb-3">
-                                        <label>Avatar</label>
+        <textarea
+            name="bio"
+            class="form-control"
+            rows="4"
+            placeholder="Tulis bio singkat..."
+        ></textarea>
+    </div>
 
-                                        <input
-                                            type="file"
-                                            name="avatar"
-                                            class="form-control"
-                                        >
-                                    </div>
+    {{-- AVATAR --}}
+    <div class="form-group mb-3">
+        <label>Avatar</label>
 
-                                    {{-- PASSWORD --}}
-                                    <div class="form-group mb-3">
-                                        <label>Password Baru</label>
+        <input
+            type="file"
+            name="avatar"
+            class="form-control"
+        >
+    </div>
 
-                                        <input
-                                            type="password"
-                                            name="password"
-                                            class="form-control"
-                                        >
-                                    </div>
+    {{-- PASSWORD --}}
+    <div class="form-group mb-3">
+        <label>Password Baru</label>
 
-                                    {{-- PASSWORD CONFIRM --}}
-                                    <div class="form-group mb-3">
-                                        <label>Konfirmasi Password</label>
+        <input
+            type="password"
+            name="password"
+            class="form-control"
+            placeholder="Kosongkan jika tidak diubah"
+        >
+    </div>
 
-                                        <input
-                                            type="password"
-                                            name="password_confirmation"
-                                            class="form-control"
-                                        >
-                                    </div>
+    {{-- PASSWORD CONFIRM --}}
+    <div class="form-group mb-3">
+        <label>Konfirmasi Password</label>
 
-                                    <button class="btn btn-primary">
-                                        Update Profile
-                                    </button>
+        <input
+            type="password"
+            name="password_confirmation"
+            class="form-control"
+        >
+    </div>
 
-                                </form>
+    <button class="btn btn-primary">
+        <i class="fas fa-save"></i>
+        Update Profile
+    </button>
 
-                            </div>
-
+</form>
                         </div>
 
                     </div>
@@ -167,15 +159,10 @@
 
             </div>
 
-        </section>
+        </div>
 
-    </div>
+    </section>
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
-
-</body>
-</html>
+@endsection
