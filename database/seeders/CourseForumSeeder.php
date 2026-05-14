@@ -290,5 +290,21 @@ class CourseForumSeeder extends Seeder
         DB::table('forum_posts')->insert($posts);
 
         $this->command->info('✅ CourseForumSeeder: 3 courses, 8 threads, 10 posts berhasil dibuat.');
+
+        // ── 4. Enrollments (pelajar ke kelas) ────────────────────────────
+        $enrollments = [
+            ['course_id' => 1, 'student_id' => 4, 'status' => 'active', 'enrolled_at' => $now],
+            ['course_id' => 2, 'student_id' => 4, 'status' => 'active', 'enrolled_at' => $now],
+            ['course_id' => 3, 'student_id' => 4, 'status' => 'active', 'enrolled_at' => $now],
+        ];
+
+        foreach ($enrollments as $e) {
+            DB::table('enrollments')->insert(array_merge($e, [
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]));
+        }
+
+        $this->command->info('✅ CourseForumSeeder: 3 enrollments pelajar berhasil dibuat.');
     }
 }

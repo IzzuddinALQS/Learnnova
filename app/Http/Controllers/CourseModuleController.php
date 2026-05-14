@@ -107,7 +107,7 @@ class CourseModuleController extends Controller
         ]);
 
         return response()->json([
-            'message'  => 'Modul berhasil ditambahkan.',
+            'message'  => 'Bab berhasil ditambahkan.',
             'redirect' => route('courses.materials.index', $courseId),
         ]);
     }
@@ -138,7 +138,7 @@ class CourseModuleController extends Controller
         ]);
 
         return response()->json([
-            'message'  => 'Modul berhasil diperbarui.',
+            'message'  => 'Bab berhasil diperbarui.',
             'redirect' => route('courses.materials.index', $courseId),
         ]);
     }
@@ -154,6 +154,6 @@ class CourseModuleController extends Controller
 
         $module->delete();
 
-        return response()->json(['message' => 'Modul berhasil dihapus.']);
+        return response()->json(['message' => 'Bab berhasil dihapus.']);
     }
 }

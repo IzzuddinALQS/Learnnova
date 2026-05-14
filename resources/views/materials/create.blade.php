@@ -72,13 +72,56 @@
                         <div class="col-md-6">
                             {{-- Module --}}
                             <div class="form-group">
-                                <label for="materialModule">Modul <span class="text-danger">*</span></label>
-                                <select name="module_id" id="materialModule" class="form-control select2" required>
-                                    <option value="">-- Pilih Modul --</option>
-                                    @foreach($modules as $module)
-                                    <option value="{{ $module->id }}">{{ $module->title }}</option>
-                                    @endforeach
-                                </select>
+                                <label for="materialModule">Bab <span class="text-danger">*</span></label>
+
+                                @if($modules->isEmpty())
+                                    {{-- Belum ada modul: tampilkan alert + form buat modul inline --}}
+                                    <div class="alert alert-warning py-2 mb-2">
+                                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                                        Kelas ini belum punya bab.
+                                        Buat bab dulu sebelum menambah materi.
+                                    </div>
+                                    <div class="card card-outline card-warning mb-2">
+                                        <div class="card-header py-2">
+                                            <h6 class="card-title mb-0">
+                                                <i class="fas fa-plus mr-1"></i> Buat Bab Baru
+                                            </h6>
+                                        </div>
+                                        <div class="card-body py-2">
+                                            <form id="formQuickModule"
+                                                action="{{ route('courses.modules.store', $course->id) }}"
+                                                method="POST">
+                                                @csrf
+                                                <div class="form-group mb-2">
+                                                    <input type="text" name="title"
+                                                        class="form-control form-control-sm"
+                                                        placeholder="Nama bab, contoh: Bab 1 — Pengenalan"
+                                                        required>
+                                                </div>
+                                                <input type="hidden" name="order" value="1">
+                                                <button type="submit" class="btn btn-warning btn-sm">
+                                                    <i class="fas fa-save mr-1"></i> Simpan & Lanjut
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    {{-- Select tetap ada tapi disabled --}}
+                                    <select name="module_id" id="materialModule"
+                                        class="form-control select2" disabled>
+                                        <option value="">-- Belum ada bab --</option>
+                                    </select>
+                                @else
+                                    <select name="module_id" id="materialModule"
+                                        class="form-control select2" required>
+                                        <option value="">-- Pilih Bab --</option>
+                                        @foreach($modules as $module)
+                                            <option value="{{ $module->id }}">{{ $module->title }}</option>
+                                        @endforeach
+                                    </select>
+                                    <small class="text-muted">
+                                        Bab = pengelompokan materi dalam kelas.
+                                    </small>
+                                @endif
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -188,9 +231,9 @@ $(document).ready(function () {
                 $('#fileRequired').hide();
                 $('#fileHint').text('Format: mp4, webm. Maks 100MB. Opsional jika menggunakan URL YouTube.');
                 $('#fieldContent').show();
-                $('#labelContent').text('URL YouTube Embed (opsional)');
-                $('#materialContent').attr('placeholder', 'https://www.youtube.com/embed/...');
-                $('#contentHint').text('Masukkan URL embed YouTube jika tidak upload file.');
+                $('#labelContent').text('URL YouTube (opsional)');
+                $('#materialContent').attr('placeholder', 'https://www.youtube.com/watch?v=... atau https://youtu.be/...');
+                $('#contentHint').text('Tempel link YouTube biasa — akan otomatis dikonversi ke embed.');
                 // Change textarea to input for URL
                 $('#materialContent').attr('rows', 2);
                 break;
@@ -260,6 +303,35 @@ $(document).ready(function () {
 
     // AJAX form submit
     ajaxForm('#formMaterial');
+
+    // Quick module form — setelah berhasil reload halaman agar dropdown terisi
+    $(document).on('submit', '#formQuickModule', function (e) {
+        e.preventDefault();
+        const $btn = $(this).find('[type=submit]');
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...');
+
+        $.ajax({
+            url: $(this).attr('action'),
+            type: 'POST',
+            data: new FormData(this),
+            processData: false,
+            contentType: false,
+            success: function (res) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Bab dibuat!',
+                    text: res.message,
+                    timer: 1200,
+                    showConfirmButton: false,
+                }).then(() => location.reload());
+            },
+            error: function (xhr) {
+                $btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan & Lanjut');
+                const msg = xhr.responseJSON?.errors?.title?.[0] || 'Gagal membuat bab.';
+                Swal.fire('Error', msg, 'error');
+            }
+        });
+    });
 
 });
 </script>

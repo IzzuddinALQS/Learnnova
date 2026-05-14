@@ -1,84 +1,143 @@
 @extends('main')
-@section('title', 'Detail Silabus - ' . $syllabus->name)
+
+@section('title', 'Detail Silabus — ' . $syllabus->name)
 
 @section('content')
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-10">
-                <div class="card shadow-lg border-0">
-                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                        <h4 class="mb-0">Detail Silabus</h4>
-                    </div>
-
-                    <div class="card-body">
-                        <div class="row">
-                            <!-- Kolom Gambar/Tema -->
-                            <div class="col-md-4 text-center mb-4">
-                                <img src="{{ Str::startsWith($syllabus->theme, ['http://', 'https://']) ? $syllabus->theme : asset('img/' . $syllabus->theme) }}"
-                                    class="img-fluid rounded shadow" alt="{{ $syllabus->name }}"
-                                    style="max-height: 300px; width: 100%; object-fit: cover;">
-
-                                <div class="mt-3">
-                                    <span class="badge bg-info text-dark p-2">
-                                        <i class="fas fa-clock"></i> Durasi: {{ $syllabus->duration_weeks }} Minggu
-                                    </span>
-                                </div>
-                            </div>
-
-                            <!-- Kolom Informasi Detail -->
-                            <div class="col-md-8">
-                                <h2 class="font-weight-bold text-primary">{{ $syllabus->name }}</h2>
-                                <p class="text-muted mb-4">
-                                    <i class="fas fa-user-tie"></i> Pengajar: <strong>{{ $syllabus->instructor }}</strong>
-                                </p>
-
-                                <hr>
-
-                                <h5 class="text-secondary font-weight-bold">Deskripsi Silabus</h5>
-                                <p class="text-justify" style="line-height: 1.6;">
-                                    {{ $syllabus->description ?: 'Tidak ada deskripsi untuk silabus ini.' }}
-                                </p>
-
-                                <div class="mt-5 p-3 bg-light rounded">
-                                    <h6 class="text-muted small uppercase font-weight-bold">Informasi Tambahan</h6>
-                                    <div class="row">
-                                        <div class="col-6">
-                                            <small class="d-block text-muted">Dibuat Oleh:</small>
-                                            <span>{{ $syllabus->creator->name ?? 'Sistem' }}</span>
-                                        </div>
-                                        <div class="col-6">
-                                            <small class="d-block text-muted">Terakhir Diperbarui:</small>
-                                            <span>{{ $syllabus->updated_at->format('d M Y') }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-footer bg-white d-flex justify-content-end align-items-center">
-                        {{-- Menggunakan d-flex dan ms-2 (margin start) untuk memberi jarak antar elemen --}}
-                        <div class="d-flex gap-2">
-                            <a href="{{ route('syllabus.index') }}" class="btn btn-secondary shadow-sm">
-                                <i class="fas fa-arrow-left"></i> Kembali
-                            </a>
-
-                            <a href="{{ route('syllabus.edit', $syllabus->id) }}"
-                                class="btn btn-warning text-dark shadow-sm">
-                                <i class="fas fa-edit"></i> Edit Data
-                            </a>
-
-                            <form action="{{ route('syllabus.destroy', $syllabus->id) }}" method="POST"
-                                onsubmit="return confirm('Apakah Anda yakin ingin menghapus ini?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger shadow-sm">
-                                    <i class="fas fa-trash"></i> Hapus
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">Detail Silabus</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('syllabus.index') }}">Silabus</a></li>
+                    <li class="breadcrumb-item active">{{ Str::limit($syllabus->name, 30) }}</li>
+                </ol>
             </div>
         </div>
     </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+
+            {{-- Kolom Utama --}}
+            <div class="col-lg-8 col-md-12 mb-4">
+                <div class="card card-primary card-outline">
+                    <div class="card-header">
+                        <h3 class="card-title font-weight-bold">{{ $syllabus->name }}</h3>
+                        <div class="card-tools">
+                            <span class="badge badge-info px-3 py-2">
+                                <i class="fas fa-clock mr-1"></i>{{ $syllabus->duration_weeks }} Minggu
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @php
+                            $imgUrl = $syllabus->theme
+                                ? (Str::startsWith($syllabus->theme, ['http://', 'https://'])
+                                    ? $syllabus->theme
+                                    : asset('img/' . $syllabus->theme))
+                                : asset('img/images.jpg');
+                        @endphp
+                        <img src="{{ $imgUrl }}" alt="{{ $syllabus->name }}"
+                            class="img-fluid rounded mb-4 shadow-sm"
+                            style="width: 100%; max-height: 320px; object-fit: cover;">
+
+                        <h6 class="font-weight-bold text-muted text-uppercase mb-2">Deskripsi</h6>
+                        <p style="line-height: 1.8;">
+                            {{ $syllabus->description ?: 'Tidak ada deskripsi untuk silabus ini.' }}
+                        </p>
+                    </div>
+                    <div class="card-footer bg-white">
+                        <a href="{{ route('syllabus.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left mr-1"></i> Kembali
+                        </a>
+                        @if(auth()->user()->hasPermission('syllabus.manage'))
+                            <a href="{{ route('syllabus.edit', $syllabus->id) }}" class="btn btn-warning ml-2">
+                                <i class="fas fa-edit mr-1"></i> Edit
+                            </a>
+                            <button class="btn btn-danger ml-2 btn-delete"
+                                data-url="{{ route('syllabus.destroy', $syllabus->id) }}"
+                                data-redirect="{{ route('syllabus.index') }}">
+                                <i class="fas fa-trash mr-1"></i> Hapus
+                            </button>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            {{-- Kolom Info --}}
+            <div class="col-lg-4 col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-info-circle mr-2"></i>Informasi</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tr>
+                                <td class="text-muted pl-3" style="width: 40%;">Durasi</td>
+                                <td class="font-weight-bold">{{ $syllabus->duration_weeks }} minggu</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted pl-3">Digunakan</td>
+                                <td class="font-weight-bold">{{ $syllabus->courses_count }} kelas</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted pl-3">Dibuat oleh</td>
+                                <td class="font-weight-bold">{{ optional($syllabus->creator)->name ?? 'Sistem' }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted pl-3">Dibuat</td>
+                                <td>{{ $syllabus->created_at->format('d M Y') }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted pl-3">Diperbarui</td>
+                                <td>{{ $syllabus->updated_at->format('d M Y') }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
 @endsection
+
+@push('scripts')
+<script>
+// Override ajaxDelete agar redirect ke index setelah hapus
+$(document).on('click', '.btn-delete', function () {
+    const url      = $(this).data('url');
+    const redirect = $(this).data('redirect') || '{{ route('syllabus.index') }}';
+
+    Swal.fire({
+        title: 'Hapus Silabus?',
+        text: 'Data yang dihapus tidak bisa dikembalikan.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fas fa-trash mr-1"></i> Ya, Hapus',
+        cancelButtonText: 'Batal',
+    }).then(result => {
+        if (!result.isConfirmed) return;
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: { _method: 'DELETE', _token: $('meta[name="csrf-token"]').attr('content') },
+            success: function (res) {
+                Swal.fire({ icon: 'success', title: 'Dihapus!', text: res.message,
+                    timer: 1500, showConfirmButton: false })
+                    .then(() => window.location.href = redirect);
+            },
+            error: function () { Swal.fire('Error', 'Gagal menghapus data.', 'error'); }
+        });
+    });
+});
+</script>
+@endpush

@@ -32,6 +32,34 @@ class User extends Authenticatable
                     ->wherePivot('model_type', self::class);
     }
 
+    /**
+     * Kelas yang diajar (untuk pengajar) — via pivot course_instructors
+     */
+    public function taughtCourses()
+    {
+        return $this->belongsToMany(Course::class, 'course_instructors', 'user_id', 'course_id')
+                    ->withPivot('is_primary')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Enrollment pelajar ke kelas
+     */
+    public function enrollments()
+    {
+        return $this->hasMany(Enrollment::class, 'student_id');
+    }
+
+    /**
+     * Kelas yang diikuti pelajar (via enrollment)
+     */
+    public function enrolledCourses()
+    {
+        return $this->belongsToMany(Course::class, 'enrollments', 'student_id', 'course_id')
+                    ->withPivot('status', 'enrolled_at', 'completed_at')
+                    ->withTimestamps();
+    }
+
     public function hasRole(string $role): bool
     {
         return $this->roles()->where('name', $role)->exists();

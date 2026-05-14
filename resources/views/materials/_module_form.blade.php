@@ -1,11 +1,11 @@
-{{-- Partial: form fields untuk tambah/edit modul --}}
+{{-- Partial: form fields untuk tambah/edit bab --}}
 <div class="form-group">
-    <label for="moduleTitle">Judul Modul <span class="text-danger">*</span></label>
+    <label for="moduleTitle">Judul Bab <span class="text-danger">*</span></label>
     <input type="text"
            name="title"
            id="moduleTitle"
            class="form-control"
-           placeholder="Contoh: Pengenalan Dasar"
+           placeholder="Contoh: Bab 1 — Pengenalan Dasar"
            maxlength="255"
            required>
 </div>
@@ -16,7 +16,7 @@
               id="moduleDescription"
               class="form-control"
               rows="3"
-              placeholder="Deskripsi singkat modul (opsional)"></textarea>
+              placeholder="Deskripsi singkat bab ini (opsional)"></textarea>
 </div>
 
 <div class="form-group">

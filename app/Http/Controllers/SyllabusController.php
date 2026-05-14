@@ -5,72 +5,109 @@ namespace App\Http\Controllers;
 use App\Models\Syllabus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
 
 class SyllabusController extends Controller
 {
     public function index()
     {
-        $data_syllabi = Syllabus::all();
+        if (!Auth::user()->hasPermission('syllabus.view')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $data_syllabi = Syllabus::withCount('courses')->latest()->get();
         return view('syllabus.index', compact('data_syllabi'));
-    } 
+    }
 
     public function create()
     {
-        $images = array_diff(scandir(public_path('img')), array('.', '..'));
-        return view('syllabus.create', compact('images'));
-        // return view('syllabus.create');
-    } 
+        if (!Auth::user()->hasPermission('syllabus.manage')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $images = array_values(array_diff(scandir(public_path('img')), ['.', '..']));
+        return view('syllabus.form', compact('images'));
+    }
 
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
+        if (!Auth::user()->hasPermission('syllabus.manage')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $validator = validator($request->all(), [
             'name'           => 'required|string|max:255',
-            'instructor'     => 'required|string|max:255', 
             'theme'          => 'nullable|string|max:255',
-            'description'    => 'nullable|string',
+            'description'    => 'required|string',
             'duration_weeks' => 'required|integer|min:1',
-            // 'created_by'     => 'required|integer|exists:users,id',
         ]);
 
-        Syllabus::create($validatedData);
-        return redirect()->route('syllabus.index')->with('success', 'Silabus berhasil dibuat!');
-    }
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
+        Syllabus::create(array_merge($validator->validated(), [
+            'created_by' => Auth::id(),
+        ]));
+
+        return response()->json([
+            'message'  => 'Silabus berhasil dibuat.',
+            'redirect' => route('syllabus.index'),
+        ]);
+    }
 
     public function show(Syllabus $syllabu)
     {
-        $syllabus = $syllabu;
-        return view('syllabus.show', compact('syllabus'));
+        if (!Auth::user()->hasPermission('syllabus.view')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $syllabu->loadCount('courses');
+        return view('syllabus.show', ['syllabus' => $syllabu]);
     }
 
-    public function edit(Syllabus $syllabu) 
+    public function edit(Syllabus $syllabu)
     {
-        $syllabus = $syllabu;
-        $images = array_diff(scandir(public_path('img')), array('.', '..'));
-        return view('syllabus.edit', compact('syllabus', 'images'));
-        // return view('syllabus.edit', compact('syllabus'));
+        if (!Auth::user()->hasPermission('syllabus.manage')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $images = array_values(array_diff(scandir(public_path('img')), ['.', '..']));
+        return view('syllabus.form', ['syllabus' => $syllabu, 'images' => $images]);
     }
 
     public function update(Request $request, Syllabus $syllabu)
     {
-        $validatedData = $request->validate([
+        if (!Auth::user()->hasPermission('syllabus.manage')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $validator = validator($request->all(), [
             'name'           => 'required|string|max:255',
-            'instructor'     => 'required|string|max:255', 
             'theme'          => 'nullable|string|max:255',
-            'description'    => 'nullable|string',
+            'description'    => 'required|string',
             'duration_weeks' => 'required|integer|min:1',
         ]);
 
-        $syllabu->update($validatedData);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
-        return redirect()->route('syllabus.show', $syllabu->id)->with('success', 'Silabus berhasil diperbarui!');
+        $syllabu->update($validator->validated());
+
+        return response()->json([
+            'message'  => 'Silabus berhasil diperbarui.',
+            'redirect' => route('syllabus.show', $syllabu->id),
+        ]);
     }
 
     public function destroy(Syllabus $syllabu)
     {
-        $syllabu->delete();
-        return redirect()->route('syllabus.index')->with('success', 'Silabus berhasil dihapus!');
-    }
+        if (!Auth::user()->hasPermission('syllabus.manage')) {
+            abort(403, 'Unauthorized action.');
+        }
 
+        $syllabu->delete();
+
+        return response()->json(['message' => 'Silabus berhasil dihapus.']);
+    }
 }

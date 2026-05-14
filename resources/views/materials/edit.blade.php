@@ -73,9 +73,9 @@
                         <div class="col-md-6">
                             {{-- Module --}}
                             <div class="form-group">
-                                <label for="materialModule">Modul <span class="text-danger">*</span></label>
+                                <label for="materialModule">Bab <span class="text-danger">*</span></label>
                                 <select name="module_id" id="materialModule" class="form-control select2" required>
-                                    <option value="">-- Pilih Modul --</option>
+                                    <option value="">-- Pilih Bab --</option>
                                     @foreach($modules as $module)
                                     <option value="{{ $module->id }}"
                                         {{ $material->module_id == $module->id ? 'selected' : '' }}>
@@ -200,10 +200,10 @@ $(document).ready(function () {
                 $('#labelFile').html('File Video <small class="text-muted">(opsional jika ada URL YouTube)</small>');
                 $('#fileHint').text('Format: mp4, webm. Maks 100MB.');
                 $('#fieldContent').show();
-                $('#labelContent').text('URL YouTube Embed (opsional)');
-                $('#materialContent').attr('placeholder', 'https://www.youtube.com/embed/...');
+                $('#labelContent').text('URL YouTube (opsional)');
+                $('#materialContent').attr('placeholder', 'https://www.youtube.com/watch?v=... atau https://youtu.be/...');
                 $('#materialContent').attr('rows', 2);
-                $('#contentHint').text('Masukkan URL embed YouTube jika tidak upload file.');
+                $('#contentHint').text('Tempel link YouTube biasa — akan otomatis dikonversi ke embed.');
                 break;
 
             case 'audio':

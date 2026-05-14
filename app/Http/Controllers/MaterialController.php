@@ -104,13 +104,78 @@ class MaterialController extends Controller
         $progress     = $material->progressFor(Auth::id());
         $isBookmarked = $material->isBookmarkedBy(Auth::id());
 
+        // Load semua bab + materi untuk sidebar navigasi
+        $modules = $course->modules()->with(['materials' => function ($q) {
+            $q->orderBy('order');
+        }])->get();
+
+        // Flatten semua materi berurutan (bab order → materi order)
+        $allMaterials = $modules->flatMap(fn($m) => $m->materials)->values();
+
+        // Cari posisi materi saat ini
+        $currentIndex = $allMaterials->search(fn($m) => $m->id === $material->id);
+        $prevMaterial = $currentIndex > 0 ? $allMaterials[$currentIndex - 1] : null;
+        $nextMaterial = $currentIndex < $allMaterials->count() - 1 ? $allMaterials[$currentIndex + 1] : null;
+
+        // Progress semua materi (untuk checklist di sidebar)
+        $completedIds = [];
+        if ($isEnrolled && !$isPengajar) {
+            $completedIds = MaterialProgress::where('student_id', Auth::id())
+                ->whereIn('material_id', $allMaterials->pluck('id'))
+                ->where('is_completed', true)
+                ->pluck('material_id')
+                ->toArray();
+        }
+
+        // AJAX request — return JSON payload untuk swap konten
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json([
+                'material' => [
+                    'id'               => $material->id,
+                    'title'            => $material->title,
+                    'type'             => $material->type,
+                    'content'          => $material->content,
+                    'file_path'        => $material->file_path
+                        ? asset('storage/' . $material->file_path)
+                        : null,
+                    'duration_minutes' => $material->duration_minutes,
+                    'is_preview'       => $material->is_preview,
+                    'url'              => route('courses.materials.show', [$courseId, $material->id]),
+                    'edit_url'         => $isPengajar
+                        ? route('courses.materials.edit', [$courseId, $material->id])
+                        : null,
+                    'delete_url'       => $isPengajar
+                        ? route('courses.materials.destroy', [$courseId, $material->id])
+                        : null,
+                ],
+                'progress' => [
+                    'is_completed'  => $progress?->is_completed ?? false,
+                    'completed_at'  => $progress?->completed_at?->format('d M Y H:i'),
+                    'last_position' => $progress?->last_position ?? 0,
+                ],
+                'is_bookmarked' => $isBookmarked,
+                'prev_url' => $prevMaterial
+                    ? route('courses.materials.show', [$courseId, $prevMaterial->id])
+                    : null,
+                'next_url' => $nextMaterial
+                    ? route('courses.materials.show', [$courseId, $nextMaterial->id])
+                    : null,
+                'completed_ids' => $completedIds,
+            ]);
+        }
+
         return view('materials.show', compact(
             'course',
             'material',
             'isEnrolled',
             'isPengajar',
             'progress',
-            'isBookmarked'
+            'isBookmarked',
+            'modules',
+            'allMaterials',
+            'prevMaterial',
+            'nextMaterial',
+            'completedIds'
         ));
     }
 

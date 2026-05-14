@@ -68,6 +68,32 @@
                         <p>Kelas</p>
                     </a>
                 </li>
+
+                <li class="nav-item {{ request()->is('students*') || request()->is('teachers*') || request()->is('courses/*/enrollments*') ? 'menu-open' : '' }}">
+                    <a href="#" class="nav-link {{ request()->is('students*') || request()->is('teachers*') || request()->is('courses/*/enrollments*') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-user-graduate"></i>
+                        <p>
+                            Manajemen Peserta
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="{{ route('students.overview') }}"
+                               class="nav-link {{ request()->is('students*') ? 'active' : '' }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Daftar Pelajar</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('teachers.overview') }}"
+                               class="nav-link {{ request()->is('teachers*') ? 'active' : '' }}">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Daftar Pengajar</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
                 @endif
 
                 {{-- KELAS SAYA — pengajar & pelajar --}}
@@ -83,19 +109,18 @@
                 </li>
                 @endif
 
-                {{-- PEMBELAJARAN --}}
+                @if(auth()->check() && auth()->user()->hasPermission('materials.view'))
                 <li class="nav-header">PEMBELAJARAN</li>
 
-                @if(auth()->check() && auth()->user()->hasPermission('materials.view'))
                 <li class="nav-item">
-                    <a href="{{ route('courses.index') }}"
-                       class="nav-link {{ request()->is('courses/*/materials*') ? 'active' : '' }}">
+                    <a href="{{ route('materi.hub') }}"
+                       class="nav-link {{ request()->routeIs('materi.hub') || request()->is('courses/*/materials*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-book-open"></i>
                         <p>Materi</p>
                     </a>
                 </li>
-                @endif
 
+                @if(auth()->user()->hasPermission('assignments.view'))
                 <li class="nav-item">
                     <a href="{{ url('/assignments') }}"
                        class="nav-link {{ request()->is('assignments*') ? 'active' : '' }}">
@@ -103,7 +128,9 @@
                         <p>Tugas</p>
                     </a>
                 </li>
+                @endif
 
+                @if(auth()->user()->hasPermission('quizzes.view'))
                 <li class="nav-item">
                     <a href="{{ url('/quizzes') }}"
                        class="nav-link {{ request()->is('quizzes*') ? 'active' : '' }}">
@@ -111,7 +138,9 @@
                         <p>Quiz</p>
                     </a>
                 </li>
+                @endif
 
+                @if(auth()->user()->hasPermission('schedules.view'))
                 <li class="nav-item">
                     <a href="{{ url('/schedules') }}"
                        class="nav-link {{ request()->is('schedules*') ? 'active' : '' }}">
@@ -119,6 +148,8 @@
                         <p>Jadwal & Absensi</p>
                     </a>
                 </li>
+                @endif
+                @endif
 
                 {{-- KOMUNITAS --}}
                 <li class="nav-header">KOMUNITAS</li>

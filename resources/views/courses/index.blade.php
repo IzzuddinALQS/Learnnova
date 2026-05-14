@@ -63,7 +63,11 @@
                             <h5 class="card-title font-weight-bold mb-1">{{ $course->title }}</h5>
                             <small class="text-muted mb-2">
                                 Pengajar:
-                                <strong>{{ optional($course->instructor)->name ?? '—' }}</strong>
+                                @forelse($course->instructors as $inst)
+                                    <strong>{{ $inst->name }}</strong>@if($inst->pivot->is_primary) <span class="badge badge-primary" style="font-size:0.65rem;">Utama</span>@endif{{ !$loop->last ? ', ' : '' }}
+                                @empty
+                                    <strong>—</strong>
+                                @endforelse
                             </small>
 
                             @if($course->description)
@@ -74,6 +78,20 @@
                                 <a href="{{ route('courses.show', $course->id) }}" class="btn btn-primary btn-block">
                                     <i class="fas fa-eye mr-1"></i> Lihat Kelas
                                 </a>
+                                @if(auth()->user()->hasPermission('courses.edit'))
+                                    <div class="btn-group btn-block mt-1">
+                                        <a href="{{ route('courses.edit', $course->id) }}" class="btn btn-warning btn-sm">
+                                            <i class="fas fa-edit mr-1"></i> Edit
+                                        </a>
+                                        <a href="{{ route('enrollments.index', $course->id) }}" class="btn btn-info btn-sm">
+                                            <i class="fas fa-users mr-1"></i> Pelajar
+                                        </a>
+                                        <button class="btn btn-danger btn-sm btn-delete-course"
+                                            data-url="{{ route('courses.destroy', $course->id) }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -89,4 +107,23 @@
     </div>
 </section>
 @endsection
+
+@push('scripts')
+<script>
+$(document).on('click', '.btn-delete-course', function() {
+    const url = $(this).data('url');
+    if (!confirm('Hapus kelas ini? Data terkait (modul, materi, enrollment) juga akan dihapus.')) return;
+    $.ajax({
+        url: url,
+        method: 'POST',
+        data: { _token: $('meta[name="csrf-token"]').attr('content'), _method: 'DELETE' },
+        success: function(res) {
+            toastr.success(res.message);
+            setTimeout(() => location.reload(), 1000);
+        },
+        error: function() { toastr.error('Gagal menghapus kelas.'); }
+    });
+});
+</script>
+@endpush
 

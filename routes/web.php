@@ -10,7 +10,9 @@ use App\Http\Controllers\CourseController;
 use App\Http\Controllers\SyllabusController;
 use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\CourseModuleController;
+use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\MaterialController;
+use App\Http\Controllers\MateriHubController;
 use Illuminate\Support\Facades\Route;
 
 // Auth
@@ -34,6 +36,20 @@ Route::middleware('auth')->group(function () {
     Route::resource('courses', CourseController::class);
     Route::resource('syllabus', SyllabusController::class);
     Route::resource('assignments', AssignmentController::class);
+
+    // Enrollment — manajemen pelajar & pengajar per kelas
+    Route::prefix('courses/{course}/enrollments')->name('enrollments.')->group(function () {
+        Route::get('/',                        [EnrollmentController::class, 'index'])->name('index');
+        Route::post('/',                       [EnrollmentController::class, 'store'])->name('store');
+        Route::put('/{enrollment}',            [EnrollmentController::class, 'update'])->name('update');
+        Route::delete('/{enrollment}',         [EnrollmentController::class, 'destroy'])->name('destroy');
+    });
+    // Overview pelajar & pengajar (akademik)
+    Route::get('/students',  [EnrollmentController::class, 'studentOverview'])->name('students.overview');
+    Route::get('/teachers',  [EnrollmentController::class, 'teacherOverview'])->name('teachers.overview');
+
+    // Hub materi — entry point dari sidebar
+    Route::get('/materi', [MateriHubController::class, 'index'])->name('materi.hub');
 
     // Forum global (langsung dari sidebar)
     Route::get('/forum', [ForumController::class, 'globalIndex'])->name('forum.global');

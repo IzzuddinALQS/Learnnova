@@ -31,11 +31,31 @@ class Course extends Model
     ];
 
     /**
-     * Get the instructor of the course
+     * Pengajar utama (backward-compat, dari kolom instructor_id)
      */
     public function instructor()
     {
         return $this->belongsTo(User::class, 'instructor_id');
+    }
+
+    /**
+     * Semua pengajar kelas (many-to-many via course_instructors)
+     */
+    public function instructors()
+    {
+        return $this->belongsToMany(User::class, 'course_instructors', 'course_id', 'user_id')
+                    ->withPivot('is_primary')
+                    ->withTimestamps()
+                    ->orderByPivot('is_primary', 'desc');
+    }
+
+    /**
+     * Pengajar utama via pivot
+     */
+    public function primaryInstructor()
+    {
+        return $this->belongsToMany(User::class, 'course_instructors', 'course_id', 'user_id')
+                    ->wherePivot('is_primary', true);
     }
 
     /**

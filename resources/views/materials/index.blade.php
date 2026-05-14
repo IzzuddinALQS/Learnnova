@@ -32,8 +32,8 @@
                 </h3>
                 <div class="card-tools">
                     @if($isPengajar)
-                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#modalAddModule">
-                        <i class="fas fa-plus mr-1"></i> Tambah Modul
+                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#modalAddBab">
+                        <i class="fas fa-plus mr-1"></i> Tambah Bab
                     </button>
                     <a href="{{ route('courses.materials.create', $course->id) }}" class="btn btn-success btn-sm">
                         <i class="fas fa-plus mr-1"></i> Tambah Materi
@@ -74,17 +74,17 @@
 
                                 @if($isPengajar)
                                 <button type="button"
-                                        class="btn btn-warning btn-xs btn-edit-module"
+                                        class="btn btn-warning btn-xs btn-edit-bab"
                                         data-id="{{ $module->id }}"
                                         data-title="{{ $module->title }}"
                                         data-description="{{ $module->description }}"
                                         data-order="{{ $module->order }}"
                                         data-url="{{ route('courses.modules.update', [$course->id, $module->id]) }}"
-                                        data-toggle="modal" data-target="#modalEditModule">
+                                        data-toggle="modal" data-target="#modalEditBab">
                                     <i class="fas fa-edit"></i> Edit
                                 </button>
                                 <button type="button"
-                                        class="btn btn-danger btn-xs btn-delete-module"
+                                        class="btn btn-danger btn-xs btn-delete-bab"
                                         data-url="{{ route('courses.modules.destroy', [$course->id, $module->id]) }}">
                                     <i class="fas fa-trash"></i> Hapus
                                 </button>
@@ -180,7 +180,7 @@
                         @empty
                         <div class="px-3 py-2 text-muted">
                             <i class="fas fa-info-circle mr-1"></i>
-                            Belum ada materi di modul ini.
+                            Belum ada materi di bab ini.
                             @if($isPengajar)
                             <a href="{{ route('courses.materials.create', $course->id) }}">Tambah materi</a>
                             @endif
@@ -191,11 +191,11 @@
                 @empty
                 <div class="p-4 text-center text-muted">
                     <i class="fas fa-layer-group fa-3x mb-3 d-block"></i>
-                    Belum ada modul di kelas ini.
+                    Belum ada bab di kelas ini.
                     @if($isPengajar)
                     <br>
-                    <button type="button" class="btn btn-primary btn-sm mt-2" data-toggle="modal" data-target="#modalAddModule">
-                        <i class="fas fa-plus mr-1"></i> Tambah Modul Pertama
+                    <button type="button" class="btn btn-primary btn-sm mt-2" data-toggle="modal" data-target="#modalAddBab">
+                        <i class="fas fa-plus mr-1"></i> Tambah Bab Pertama
                     </button>
                     @endif
                 </div>
@@ -207,17 +207,17 @@
     </div>
 </section>
 
-{{-- Modal Tambah Modul --}}
+{{-- Modal Tambah Bab --}}
 @if($isPengajar)
-<div class="modal fade" id="modalAddModule" tabindex="-1">
+<div class="modal fade" id="modalAddBab" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-plus mr-2"></i>Tambah Modul</h5>
+                <h5 class="modal-title"><i class="fas fa-plus mr-2"></i>Tambah Bab</h5>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body">
-                <form id="formAddModule"
+                <form id="formAddBab"
                       action="{{ route('courses.modules.store', $course->id) }}"
                       method="POST">
                     @csrf
@@ -234,16 +234,16 @@
     </div>
 </div>
 
-{{-- Modal Edit Modul --}}
-<div class="modal fade" id="modalEditModule" tabindex="-1">
+{{-- Modal Edit Bab --}}
+<div class="modal fade" id="modalEditBab" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-edit mr-2"></i>Edit Modul</h5>
+                <h5 class="modal-title"><i class="fas fa-edit mr-2"></i>Edit Bab</h5>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body">
-                <form id="formEditModule"
+                <form id="formEditBab"
                       action=""
                       method="POST">
                     @csrf
@@ -267,28 +267,28 @@
 <script>
 $(document).ready(function () {
 
-    // AJAX form untuk tambah modul
-    ajaxForm('#formAddModule');
+    // AJAX form untuk Tambah Bab
+    ajaxForm('#formAddBab');
 
-    // AJAX form untuk edit modul
-    ajaxForm('#formEditModule');
+    // AJAX form untuk Edit Bab
+    ajaxForm('#formEditBab');
 
-    // AJAX delete modul
-    ajaxDelete('.btn-delete-module', 'Hapus modul ini beserta semua materinya?');
+    // AJAX delete bab
+    ajaxDelete('.btn-delete-bab', 'Hapus Bab ini beserta semua materinya?');
 
     // AJAX delete materi
     ajaxDelete('.btn-delete-material', 'Hapus materi ini?');
 
-    // Isi form edit modul saat modal dibuka
-    $(document).on('click', '.btn-edit-module', function () {
+    // Isi form Edit Bab saat modal dibuka
+    $(document).on('click', '.btn-edit-bab', function () {
         const btn = $(this);
-        $('#formEditModule').attr('action', btn.data('url'));
-        $('#formEditModule [name="title"]').val(btn.data('title'));
-        $('#formEditModule [name="description"]').val(btn.data('description'));
-        $('#formEditModule [name="order"]').val(btn.data('order'));
+        $('#formEditBab').attr('action', btn.data('url'));
+        $('#formEditBab [name="title"]').val(btn.data('title'));
+        $('#formEditBab [name="description"]').val(btn.data('description'));
+        $('#formEditBab [name="order"]').val(btn.data('order'));
         // Clear previous errors
-        $('#formEditModule .is-invalid').removeClass('is-invalid');
-        $('#formEditModule .invalid-feedback').remove();
+        $('#formEditBab .is-invalid').removeClass('is-invalid');
+        $('#formEditBab .invalid-feedback').remove();
     });
 
 });
