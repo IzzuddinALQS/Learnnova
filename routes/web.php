@@ -13,6 +13,7 @@ use App\Http\Controllers\CourseModuleController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\MateriHubController;
+use App\Http\Controllers\ScheduleController;
 use Illuminate\Support\Facades\Route;
 
 // Auth
@@ -36,6 +37,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('courses', CourseController::class);
     Route::resource('syllabus', SyllabusController::class);
     Route::resource('assignments', AssignmentController::class);
+    Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
 
     // Enrollment — manajemen pelajar & pengajar per kelas
     Route::prefix('courses/{course}/enrollments')->name('enrollments.')->group(function () {

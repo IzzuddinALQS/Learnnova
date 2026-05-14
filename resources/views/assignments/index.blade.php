@@ -27,7 +27,9 @@
         </div>
 
         <!-- Judul -->
-        <h5 class="fw-bold">Tugas Gramatika</h5>
+        <h5 class="fw-bold">
+          <a href="{{ route('assignments.show', 1) }}" class="text-dark text-decoration-none">Tugas Gramatika</a>
+        </h5>
 
         <!-- Deadline -->
         <p class="text-muted mb-2">Tenggat: 27 April 2026</p>
@@ -43,7 +45,9 @@
         <div class="mb-2">
           <span class="badge bg-primary">Bahasa Inggris</span>
         </div>
-        <h5 class="fw-bold">Essay Grammar Struktur Kalimat</h5>
+        <h5 class="fw-bold">
+          <a href="{{ route('assignments.show', 2) }}" class="text-dark text-decoration-none">Essay Grammar Struktur Kalimat</a>
+        </h5>
         <p class="text-muted mb-2">Tenggat: 27 April 2026</p>
         <p class="text-muted small">
           Buat sebuah essay pendek tentang struktur kalimat dalam bahasa Inggris.
@@ -57,7 +61,9 @@
         <div class="mb-2">
           <span class="badge bg-primary">Matetika</span>
         </div>
-        <h5 class="fw-bold">Essay Grammar Struktur Kalimat</h5>
+        <h5 class="fw-bold">
+          <a href="{{ route('assignments.show', 3) }}" class="text-dark text-decoration-none">Essay Grammar Struktur Kalimat</a>
+        </h5>
         <p class="text-muted mb-2">Tenggat: 27 April 2026</p>
         <p class="text-muted small">
           Buat sebuah essay pendek tentang struktur kalimat dalam bahasa Inggris.

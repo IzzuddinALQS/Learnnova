@@ -12,4 +12,9 @@ class AssignmentController extends Controller
         return view('assignments.index');
     }
 
+    public function show($id)
+    {
+        return view('assignments.detail-tugas');
+    }
+
 }
