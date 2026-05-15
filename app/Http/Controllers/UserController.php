@@ -102,6 +102,38 @@ class UserController extends Controller
 
 public function updateProfile(Request $request)
 {
-    dd($request->all());
-}
-}
+    $user = auth()->user();
+
+    $validator = validator($request->all(), [
+        'name'     => 'required|string|max:255',
+        'email'    => [
+            'required',
+            'email',
+            Rule::unique('users')->ignore($user->id)
+        ],
+        'phone'    => 'nullable|string|max:20',
+        'bio'      => 'nullable|string',
+        'password' => 'nullable|min:6|confirmed',
+    ]);
+
+    if ($validator->fails()) {
+        return back()
+            ->withErrors($validator)
+            ->withInput();
+    }
+
+    $user->update([
+        'name'     => $request->name,
+        'email'    => $request->email,
+        'phone'    => $request->phone,
+        'bio'      => $request->bio,
+        'password' => $request->password
+            ? Hash::make($request->password)
+            : $user->password,
+    ]);
+
+    return redirect()
+        ->back()
+        ->with('success', 'Profile berhasil diperbarui.');
+    }
+}   

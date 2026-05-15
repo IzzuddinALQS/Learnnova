@@ -27,11 +27,11 @@
                             >
 
                             <h3 class="profile-username mt-3">
-                                Budi Sulistiyo
+                                {{ auth()->user()->name }}
                             </h3>
 
                             <p class="text-muted">
-                                Fullstack Developer
+                                {{ auth()->user()->roles->first()->name ?? 'User' }}
                             </p>
 
                         </div>
@@ -53,104 +53,127 @@
 
                         <div class="card-body">
 
-<form
-    action="/profile/update"
-    method="POST"
-    enctype="multipart/form-data"
->
+                            {{-- SUCCESS MESSAGE --}}
+                            @if(session('success'))
+                                <div class="alert alert-success">
+                                    {{ session('success') }}
+                                </div>
+                            @endif
 
-    @csrf
+                            {{-- ERROR MESSAGE --}}
+                            @if($errors->any())
+                                <div class="alert alert-danger">
+                                    <ul class="mb-0">
+                                        @foreach($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
 
-    {{-- NAME --}}
-    <div class="form-group mb-3">
-        <label>Nama Lengkap</label>
+                            <form
+                                action="/profile/update"
+                                method="POST"
+                                enctype="multipart/form-data"
+                            >
 
-        <input
-            type="text"
-            name="name"
-            class="form-control"
-            value="{{ auth()->user()->name }}"
-            required
-        >
-    </div>
+                                @csrf
 
-    {{-- EMAIL --}}
-    <div class="form-group mb-3">
-        <label>Email</label>
+                                {{-- NAME --}}
+                                <div class="form-group mb-3">
+                                    <label>Nama Lengkap</label>
 
-        <input
-            type="email"
-            name="email"
-            class="form-control"
-            value="{{ auth()->user()->email }}"
-            required
-        >
-    </div>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        class="form-control"
+                                        value="{{ auth()->user()->name }}"
+                                        required
+                                    >
+                                </div>
 
-    {{-- PHONE --}}
-    <div class="form-group mb-3">
-        <label>No HP</label>
+                                {{-- EMAIL --}}
+                                <div class="form-group mb-3">
+                                    <label>Email</label>
 
-        <input
-            type="text"
-            name="phone"
-            class="form-control"
-            placeholder="08xxxxxxxxxx"
-        >
-    </div>
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        class="form-control"
+                                        value="{{ auth()->user()->email }}"
+                                        required
+                                    >
+                                </div>
 
-    {{-- BIO --}}
-    <div class="form-group mb-3">
-        <label>Bio</label>
+                                {{-- PHONE --}}
+                                <div class="form-group mb-3">
+                                    <label>No HP</label>
 
-        <textarea
-            name="bio"
-            class="form-control"
-            rows="4"
-            placeholder="Tulis bio singkat..."
-        ></textarea>
-    </div>
+                                    <input
+                                        type="text"
+                                        name="phone"
+                                        class="form-control"
+                                        value="{{ auth()->user()->phone }}"
+                                        placeholder="08xxxxxxxxxx"
+                                    >
+                                </div>
 
-    {{-- AVATAR --}}
-    <div class="form-group mb-3">
-        <label>Avatar</label>
+                                {{-- BIO --}}
+                                <div class="form-group mb-3">
+                                    <label>Bio</label>
 
-        <input
-            type="file"
-            name="avatar"
-            class="form-control"
-        >
-    </div>
+                                    <textarea
+                                        name="bio"
+                                        class="form-control"
+                                        rows="4"
+                                        placeholder="Tulis bio singkat..."
+                                    >{{ auth()->user()->bio }}</textarea>
+                                </div>
 
-    {{-- PASSWORD --}}
-    <div class="form-group mb-3">
-        <label>Password Baru</label>
+                                {{-- AVATAR --}}
+                                <div class="form-group mb-3">
+                                    <label>Avatar</label>
 
-        <input
-            type="password"
-            name="password"
-            class="form-control"
-            placeholder="Kosongkan jika tidak diubah"
-        >
-    </div>
+                                    <input
+                                        type="file"
+                                        name="avatar"
+                                        class="form-control"
+                                    >
+                                </div>
 
-    {{-- PASSWORD CONFIRM --}}
-    <div class="form-group mb-3">
-        <label>Konfirmasi Password</label>
+                                {{-- PASSWORD --}}
+                                <div class="form-group mb-3">
+                                    <label>Password Baru</label>
 
-        <input
-            type="password"
-            name="password_confirmation"
-            class="form-control"
-        >
-    </div>
+                                    <input
+                                        type="password"
+                                        name="password"
+                                        class="form-control"
+                                        placeholder="Kosongkan jika tidak diubah"
+                                    >
+                                </div>
 
-    <button class="btn btn-primary">
-        <i class="fas fa-save"></i>
-        Update Profile
-    </button>
+                                {{-- PASSWORD CONFIRM --}}
+                                <div class="form-group mb-3">
+                                    <label>Konfirmasi Password</label>
 
-</form>
+                                    <input
+                                        type="password"
+                                        name="password_confirmation"
+                                        class="form-control"
+                                    >
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    class="btn btn-primary"
+                                >
+                                    <i class="fas fa-save"></i>
+                                    Update Profile
+                                </button>
+
+                            </form>
+
                         </div>
 
                     </div>
