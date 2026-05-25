@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('syllabus', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->foreignId('instructor_id')->nullable()->constrained('users')->nullOnDelete;
             $table->string('theme')->nullable();
             $table->text('description')->nullable();
             $table->unsignedInteger('duration_weeks')->default(1);
