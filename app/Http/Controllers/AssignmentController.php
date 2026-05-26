@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Assignment;
+use App\Models\AssignmentSubmission;
 use App\Models\Course;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,7 +13,6 @@ class AssignmentController extends Controller
 {
     private function getInstructorCourses()
     {
-        // Super admin lihat semua course
         if (Auth::user()->hasRole('super_admin')) {
             return Course::pluck('id');
         }
@@ -22,16 +22,43 @@ class AssignmentController extends Controller
             ->pluck('id');
     }
 
+    private function authorizeAssignment(Assignment $assignment)
+    {
+        if (Auth::user()->hasRole('super_admin')) {
+            return;
+        }
+
+        if ($assignment->created_by !== Auth::id()) {
+            abort(403, 'Anda tidak memiliki akses ke tugas ini.');
+        }
+    }
+
     public function index()
     {
         if (!Auth::user()->hasPermission('assignments.view')) {
             abort(403, 'Unauthorized action.');
         }
 
+        // Pelajar
+        if (Auth::user()->hasRole('pelajar')) {
+            $enrolledCourseIds = Auth::user()->enrolledCourses()->pluck('courses.id');
+
+            $assignments = Assignment::with(['course', 'submissions' => function ($q) {
+                $q->where('student_id', Auth::id());
+            }])
+                ->whereIn('course_id', $enrolledCourseIds)
+                ->latest()
+                ->get();
+
+            return view('submissions.index', compact('assignments'));
+        }
+
+        // Super Admin
         if (Auth::user()->hasRole('super_admin')) {
             $assignments = Assignment::with('course')->latest()->get();
         } else {
-            $courseIds = $this->getInstructorCourses();
+            // Pengajar
+            $courseIds   = $this->getInstructorCourses();
             $assignments = Assignment::with('course')
                 ->whereIn('course_id', $courseIds)
                 ->where('created_by', Auth::id())
@@ -49,8 +76,8 @@ class AssignmentController extends Controller
         }
 
         $courseIds = $this->getInstructorCourses();
+        $courses   = Course::whereIn('id', $courseIds)->get();
 
-        $courses = Course::whereIn('id', $courseIds)->get();
         return view('assignments.form', compact('courses'));
     }
 
@@ -97,8 +124,23 @@ class AssignmentController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $this->authorizeAssignment($assignment);
+        // Pelajar
+        if (Auth::user()->hasRole('pelajar')) {
+            $enrolled = Auth::user()->enrolledCourses()->where('courses.id', $assignment->course_id)->exists();
+            if (!$enrolled) {
+                abort(403, 'Anda tidak terdaftar di kelas ini.');
+            }
 
+            $assignment->load('course');
+            $submission = AssignmentSubmission::where('assignment_id', $assignment->id)
+                ->where('student_id', Auth::id())
+                ->first();
+
+            return view('submissions.show', compact('assignment', 'submission'));
+        }
+
+        // Pengajar & Super Admin
+        $this->authorizeAssignment($assignment);
         $assignment->load(['course', 'creator']);
         $assignment->loadCount('submissions');
 
@@ -180,15 +222,62 @@ class AssignmentController extends Controller
         return response()->json(['message' => 'Tugas berhasil dihapus.']);
     }
 
-    // Pastikan pengajar hanya bisa akses tugasnya sendiri
-    private function authorizeAssignment(Assignment $assignment)
+    public function submit(Request $request, Assignment $assignment)
     {
-        if (Auth::user()->hasRole('super_admin')) {
-            return; // super admin boleh akses semua
+        if (!Auth::user()->hasPermission('assignments.submit')) {
+            abort(403, 'Unauthorized action.');
         }
 
-        if ($assignment->created_by !== Auth::id()) {
-            abort(403, 'Anda tidak memiliki akses ke tugas ini.');
+        if ($assignment->due_date->isPast()) {
+            return response()->json(['message' => 'Deadline telah lewat.'], 422);
         }
+
+        $existing = AssignmentSubmission::where('assignment_id', $assignment->id)
+            ->where('student_id', Auth::id())
+            ->first();
+
+        if ($existing && in_array($existing->status, ['graded', 'returned'])) {
+            return response()->json(['message' => 'Tugas sudah dinilai, tidak bisa diubah.'], 422);
+        }
+
+        $isDraft = $request->input('action') === 'draft';
+
+        $validator = validator($request->all(), [
+            'file_path'   => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,png,jpg,jpeg|max:2048',
+            'text_answer' => 'nullable|string',
+            'note'        => 'nullable|string|max:500',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $data = [
+            'assignment_id' => $assignment->id,
+            'student_id'    => Auth::id(),
+            'text_answer'   => $request->text_answer,
+            'note'          => $request->note,
+            'status'        => $isDraft ? 'draft' : 'submitted',
+            'submitted_at'  => $isDraft ? null : now(),
+        ];
+
+        if ($request->hasFile('file_path')) {
+            if ($existing?->file_path && Storage::disk('public')->exists($existing->file_path)) {
+                Storage::disk('public')->delete($existing->file_path);
+            }
+            $data['file_path'] = $request->file('file_path')->store('submissions/files', 'public');
+        }
+
+        AssignmentSubmission::updateOrCreate(
+            ['assignment_id' => $assignment->id, 'student_id' => Auth::id()],
+            $data
+        );
+
+        $message = $isDraft ? 'Draft berhasil disimpan.' : 'Tugas berhasil dikumpulkan.';
+
+        return response()->json([
+            'message'  => $message,
+            'redirect' => route('assignments.show', $assignment->id),
+        ]);
     }
 }
