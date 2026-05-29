@@ -40,7 +40,15 @@ Route::middleware('auth')->group(function () {
     Route::resource('assignments', AssignmentController::class);
     Route::post('assignments/{assignment}/submit', [AssignmentController::class, 'submit'])->name('assignments.submit');
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
+    Route::get('assignments/{assignment}/submissions', [AssignmentController::class, 'submissions'])->name('assignments.submissions');
+    Route::get('assignments/{assignment}/submissions/{submission}', [AssignmentController::class, 'gradeForm'])->name('assignments.grade.form');
+    Route::post('assignments/{assignment}/submissions/{submission}', [AssignmentController::class, 'grade'])->name('assignments.grade');
+    Route::post('/notifications/{id}/read', function ($id) {
+        Auth::user()->notifications()->where('id', $id)->update(['read_at' => now()]);
+        return response()->json(['success' => true]);
+    })->middleware('auth')->name('notifications.read');
 
+    
     // Enrollment — manajemen pelajar & pengajar per kelas
     Route::prefix('courses/{course}/enrollments')->name('enrollments.')->group(function () {
         Route::get('/',                        [EnrollmentController::class, 'index'])->name('index');

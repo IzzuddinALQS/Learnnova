@@ -30,7 +30,7 @@
                         <div class="card-header">
                             <h3 class="card-title font-weight-bold">{{ $assignment->title }}</h3>
                             <div class="card-tools">
-                                @if($assignment->due_date->isPast())
+                                @if ($assignment->due_date->isPast())
                                     <span class="badge badge-danger px-3 py-2">
                                         <i class="fas fa-clock mr-1"></i>Deadline Lewat
                                     </span>
@@ -47,7 +47,7 @@
                                 {{ $assignment->description ?: 'Tidak ada deskripsi.' }}
                             </p>
 
-                            @if($assignment->file)
+                            @if ($assignment->file)
                                 <div class="mt-3">
                                     <h6 class="font-weight-bold text-muted text-uppercase mb-2">File Lampiran</h6>
                                     <a href="{{ asset('storage/' . $assignment->file) }}" target="_blank"
@@ -61,12 +61,21 @@
                             <a href="{{ route('assignments.index') }}" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left mr-1"></i> Kembali
                             </a>
-                            @if(Auth::user()->hasPermission('assignments.edit'))
+                            @if (Auth::user()->hasPermission('assignments.edit'))
                                 <a href="{{ route('assignments.edit', $assignment->id) }}" class="btn btn-warning ml-2">
                                     <i class="fas fa-edit mr-1"></i> Edit
                                 </a>
                             @endif
-                            @if(Auth::user()->hasPermission('assignments.delete'))
+                            @if (Auth::user()->hasPermission('assignments.grade'))
+                                <a href="{{ route('assignments.submissions', $assignment->id) }}"
+                                    class="btn btn-primary ml-2">
+                                    <i class="fas fa-users mr-1"></i> Lihat Submission
+                                    @if ($assignment->submissions_count > 0)
+                                        <span class="badge badge-light ml-1">{{ $assignment->submissions_count }}</span>
+                                    @endif
+                                </a>
+                            @endif
+                            @if (Auth::user()->hasPermission('assignments.delete'))
                                 <button class="btn btn-danger ml-2 btn-delete"
                                     data-url="{{ route('assignments.destroy', $assignment->id) }}"
                                     data-redirect="{{ route('assignments.index') }}">
@@ -103,7 +112,8 @@
                                 </tr>
                                 <tr>
                                     <td class="text-muted pl-3">Dibuat oleh</td>
-                                    <td class="font-weight-bold">{{ optional($assignment->creator)->name ?? 'Sistem' }}</td>
+                                    <td class="font-weight-bold">{{ optional($assignment->creator)->name ?? 'Sistem' }}
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td class="text-muted pl-3">Dibuat</td>
@@ -125,8 +135,8 @@
 
 @push('scripts')
     <script>
-        $(document).on('click', '.btn-delete', function () {
-            const url      = $(this).data('url');
+        $(document).on('click', '.btn-delete', function() {
+            const url = $(this).data('url');
             const redirect = $(this).data('redirect') || '{{ route('assignments.index') }}';
 
             Swal.fire({
@@ -147,7 +157,7 @@
                         _method: 'DELETE',
                         _token: $('meta[name="csrf-token"]').attr('content')
                     },
-                    success: function (res) {
+                    success: function(res) {
                         Swal.fire({
                             icon: 'success',
                             title: 'Dihapus!',
@@ -156,7 +166,7 @@
                             showConfirmButton: false
                         }).then(() => window.location.href = redirect);
                     },
-                    error: function () {
+                    error: function() {
                         Swal.fire('Error', 'Gagal menghapus data.', 'error');
                     }
                 });

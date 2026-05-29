@@ -8,6 +8,7 @@ use App\Models\Course;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Notifications\AssignmentGradedNotification;
 
 class AssignmentController extends Controller
 {
@@ -55,11 +56,15 @@ class AssignmentController extends Controller
 
         // Super Admin
         if (Auth::user()->hasRole('super_admin')) {
-            $assignments = Assignment::with('course')->latest()->get();
+            $assignments = Assignment::with('course')
+                ->withCount('submissions')
+                ->latest()
+                ->get();
         } else {
             // Pengajar
             $courseIds   = $this->getInstructorCourses();
             $assignments = Assignment::with('course')
+                ->withCount('submissions')
                 ->whereIn('course_id', $courseIds)
                 ->where('created_by', Auth::id())
                 ->latest()
@@ -236,7 +241,8 @@ class AssignmentController extends Controller
             ->where('student_id', Auth::id())
             ->first();
 
-        if ($existing && in_array($existing->status, ['graded', 'returned'])) {
+        // Graded tidak bisa diubah, returned boleh submit ulang
+        if ($existing && $existing->status === 'graded') {
             return response()->json(['message' => 'Tugas sudah dinilai, tidak bisa diubah.'], 422);
         }
 
@@ -250,6 +256,21 @@ class AssignmentController extends Controller
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // Jika bukan draft, minimal harus ada jawaban
+        if (!$isDraft) {
+            $hasFile    = $request->hasFile('file_path');
+            $hasText    = !empty(trim($request->text_answer ?? ''));
+            $hasOldFile = $existing?->file_path !== null;
+
+            if (!$hasFile && !$hasText && !$hasOldFile) {
+                return response()->json([
+                    'errors' => [
+                        'text_answer' => ['Harap isi jawaban teks atau upload file sebelum mengumpulkan.']
+                    ]
+                ], 422);
+            }
         }
 
         $data = [
@@ -278,6 +299,75 @@ class AssignmentController extends Controller
         return response()->json([
             'message'  => $message,
             'redirect' => route('assignments.show', $assignment->id),
+        ]);
+    }
+
+    // Daftar submission per tugas
+    public function submissions(Assignment $assignment)
+    {
+        if (!Auth::user()->hasPermission('assignments.grade')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $this->authorizeAssignment($assignment);
+
+        $assignment->load('course');
+        $submissions = AssignmentSubmission::with('student')
+            ->where('assignment_id', $assignment->id)
+            ->latest()
+            ->get();
+
+        return view('assignments.submissions', compact('assignment', 'submissions'));
+    }
+
+    // Form grading
+    public function gradeForm(Assignment $assignment, AssignmentSubmission $submission)
+    {
+        if (!Auth::user()->hasPermission('assignments.grade')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $this->authorizeAssignment($assignment);
+        $assignment->load('course');
+        $submission->load('student');
+
+        return view('assignments.grade', compact('assignment', 'submission'));
+    }
+
+    // Simpan nilai & feedback
+    public function grade(Request $request, Assignment $assignment, AssignmentSubmission $submission)
+    {
+        if (!Auth::user()->hasPermission('assignments.grade')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $this->authorizeAssignment($assignment);
+
+        $validator = validator($request->all(), [
+            'score'    => 'required|numeric|min:0|max:' . $assignment->max_score,
+            'feedback' => 'nullable|string',
+            'status'   => 'required|in:graded,returned',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $submission->update([
+            'score'      => $request->score,
+            'feedback'   => $request->feedback,
+            'status'     => $request->status,
+            'graded_at'  => now(),
+        ]);
+
+        // Kirim notifikasi ke pelajar
+        $submission->student->notify(
+            new \App\Notifications\AssignmentGradedNotification($assignment, $submission)
+        );
+
+        return response()->json([
+            'message'  => 'Nilai berhasil disimpan.',
+            'redirect' => route('assignments.submissions', $assignment->id),
         ]);
     }
 }

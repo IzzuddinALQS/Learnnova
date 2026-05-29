@@ -107,7 +107,7 @@
                     <div class="text-muted">
                         Total: <strong>{{ $assignments->count() }}</strong> tugas
                     </div>
-                    @if(Auth::user()->hasPermission('assignments.create'))
+                    @if (Auth::user()->hasPermission('assignments.create'))
                         <a href="{{ route('assignments.create') }}" class="btn btn-success btn-sm">
                             <i class="fas fa-plus mr-1"></i> Tambah Tugas
                         </a>
@@ -125,7 +125,7 @@
                                 <th>Kelas</th>
                                 <th>Deadline</th>
                                 <th>Nilai Maks</th>
-                                <th>Lampiran</th>
+                                <th>Submissions</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
@@ -136,7 +136,7 @@
                                     <td class="font-weight-bold">{{ $item->title }}</td>
                                     <td>{{ $item->course->title ?? '-' }}</td>
                                     <td>
-                                        @if($item->due_date->isPast())
+                                        @if ($item->due_date->isPast())
                                             <span class="badge badge-danger">
                                                 <i class="fas fa-clock mr-1"></i>{{ $item->due_date->format('d M Y, H:i') }}
                                             </span>
@@ -148,24 +148,25 @@
                                     </td>
                                     <td>{{ $item->max_score }}</td>
                                     <td>
-                                        @if($item->file)
-                                            <a href="{{ asset('storage/' . $item->file) }}" target="_blank" class="btn btn-xs btn-info">
-                                                <i class="fas fa-paperclip mr-1"></i> Lihat
-                                            </a>
-                                        @else
-                                            <span class="text-muted">-</span>
-                                        @endif
+                                        <a href="{{ route('assignments.submissions', $item->id) }}"
+                                            class="btn btn-xs btn-info">
+                                            <i class="fas fa-users mr-1"></i>
+                                            {{ $item->submissions_count }} siswa
+                                        </a>
+                                    </td>
                                     </td>
                                     <td>
-                                        <a href="{{ route('assignments.show', $item->id) }}" class="btn btn-xs btn-primary">
+                                        <a href="{{ route('assignments.show', $item->id) }}"
+                                            class="btn btn-xs btn-primary">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        @if(Auth::user()->hasPermission('assignments.edit'))
-                                            <a href="{{ route('assignments.edit', $item->id) }}" class="btn btn-xs btn-warning">
+                                        @if (Auth::user()->hasPermission('assignments.edit'))
+                                            <a href="{{ route('assignments.edit', $item->id) }}"
+                                                class="btn btn-xs btn-warning">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                         @endif
-                                        @if(Auth::user()->hasPermission('assignments.delete'))
+                                        @if (Auth::user()->hasPermission('assignments.delete'))
                                             <button class="btn btn-xs btn-danger btn-delete"
                                                 data-url="{{ route('assignments.destroy', $item->id) }}">
                                                 <i class="fas fa-trash"></i>
@@ -177,7 +178,7 @@
                                 <tr>
                                     <td colspan="7" class="text-center text-muted py-4">
                                         Belum ada tugas.
-                                        @if(Auth::user()->hasPermission('assignments.create'))
+                                        @if (Auth::user()->hasPermission('assignments.create'))
                                             <a href="{{ route('assignments.create') }}">Tambah sekarang</a>.
                                         @endif
                                     </td>
