@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Course;
 use App\Models\ForumPost;
 use App\Models\ForumThread;
@@ -132,6 +133,8 @@ class ForumController extends Controller
             'image'     => $imagePath,
         ]);
 
+        ActivityLog::log('Thread forum baru: ' . $thread->title, 'forum', $thread);
+
         return response()->json([
             'message'  => 'Thread berhasil dibuat.',
             'redirect' => route('forum.show', [$courseId, $thread->id]),
@@ -216,6 +219,8 @@ class ForumController extends Controller
             $thread->delete();
         });
 
+        ActivityLog::log('Thread forum dihapus: ' . $thread->title, 'forum');
+
         return response()->json(['message' => 'Thread berhasil dihapus.']);
     }
 
@@ -282,8 +287,10 @@ class ForumController extends Controller
      */
     public function markSolution($courseId, $threadId, $postId)
     {
-        // Check permission
-        if (!Auth::user()->hasPermission('forum.moderate')) {
+        $thread = ForumThread::findOrFail($threadId);
+
+        // Pemilik thread atau moderator yang bisa mark solusi
+        if ($thread->user_id !== Auth::id() && !Auth::user()->hasPermission('forum.moderate')) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
 
@@ -305,8 +312,10 @@ class ForumController extends Controller
      */
     public function unmarkSolution($courseId, $threadId, $postId)
     {
-        // Check permission
-        if (!Auth::user()->hasPermission('forum.moderate')) {
+        $thread = ForumThread::findOrFail($threadId);
+
+        // Pemilik thread atau moderator yang bisa unmark solusi
+        if ($thread->user_id !== Auth::id() && !Auth::user()->hasPermission('forum.moderate')) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
 

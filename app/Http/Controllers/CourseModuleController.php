@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Course;
 use App\Models\CourseModule;
 use App\Models\MaterialProgress;
@@ -99,12 +100,14 @@ class CourseModuleController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        CourseModule::create([
+        $module = CourseModule::create([
             'course_id'   => $courseId,
             'title'       => $request->title,
             'description' => $request->description,
             'order'       => $request->order,
         ]);
+
+        ActivityLog::log('Bab baru ditambahkan: ' . $module->title, 'materials', $module);
 
         return response()->json([
             'message'  => 'Bab berhasil ditambahkan.',
@@ -137,6 +140,8 @@ class CourseModuleController extends Controller
             'order'       => $request->order,
         ]);
 
+        ActivityLog::log('Bab diperbarui: ' . $module->title, 'materials', $module);
+
         return response()->json([
             'message'  => 'Bab berhasil diperbarui.',
             'redirect' => route('courses.materials.index', $courseId),
@@ -153,6 +158,8 @@ class CourseModuleController extends Controller
         }
 
         $module->delete();
+
+        ActivityLog::log('Bab dihapus: ' . $module->title, 'materials');
 
         return response()->json(['message' => 'Bab berhasil dihapus.']);
     }

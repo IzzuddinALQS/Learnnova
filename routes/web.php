@@ -14,15 +14,13 @@ use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\MateriHubController;
 use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\ActivityLogController;
 use Illuminate\Support\Facades\Route;
 
 // Auth
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-Route::get('/profile', [UserController::class, 'profile']);
-Route::post('/profile/update', [UserController::class, 'updateProfile']);
-
 
 // Registration
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
@@ -32,12 +30,23 @@ Route::post('/register', [RegisterController::class, 'register']);
 Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Profile
+    Route::get('/profile', [UserController::class, 'profile'])->name('profile');
+    Route::post('/profile/update', [UserController::class, 'updateProfile'])->name('profile.update');
+
     Route::resource('users', UserController::class);
     Route::resource('roles', RoleController::class);
     Route::resource('courses', CourseController::class);
     Route::resource('syllabus', SyllabusController::class);
     Route::resource('assignments', AssignmentController::class);
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
+
+    // Activity Log
+    Route::prefix('activity-logs')->name('activity-logs.')->group(function () {
+        Route::get('/',              [ActivityLogController::class, 'index'])->name('index');
+        Route::delete('/clear-all', [ActivityLogController::class, 'destroyAll'])->name('destroyAll');
+        Route::delete('/{activityLog}', [ActivityLogController::class, 'destroy'])->name('destroy');
+    });
 
     // Enrollment — manajemen pelajar & pengajar per kelas
     Route::prefix('courses/{course}/enrollments')->name('enrollments.')->group(function () {

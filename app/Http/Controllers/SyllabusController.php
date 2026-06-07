@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Syllabus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -52,9 +53,11 @@ class SyllabusController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        Syllabus::create(array_merge($validator->validated(), [
+        $syllabus = Syllabus::create(array_merge($validator->validated(), [
             'created_by' => Auth::id(),
         ]));
+
+        ActivityLog::log('Silabus baru dibuat: ' . $syllabus->name, 'syllabus', $syllabus);
 
         return response()->json([
             'message'  => 'Silabus berhasil dibuat.',
@@ -109,6 +112,8 @@ class SyllabusController extends Controller
 
         $syllabu->update($validator->validated());
 
+        ActivityLog::log('Silabus diperbarui: ' . $syllabu->name, 'syllabus', $syllabu);
+
         return response()->json([
             'message'  => 'Silabus berhasil diperbarui.',
             'redirect' => route('syllabus.show', $syllabu->id),
@@ -122,6 +127,8 @@ class SyllabusController extends Controller
         }
 
         $syllabu->delete();
+
+        ActivityLog::log('Silabus dihapus: ' . $syllabu->name, 'syllabus');
 
         return response()->json(['message' => 'Silabus berhasil dihapus.']);
     }

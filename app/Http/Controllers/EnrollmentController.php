@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\Role;
@@ -72,6 +73,8 @@ class EnrollmentController extends Controller
             }
         }
 
+        ActivityLog::log($added . ' pelajar didaftarkan ke kelas: ' . $course->title, 'courses', $course);
+
         return response()->json([
             'message' => "$added pelajar berhasil didaftarkan ke kelas.",
         ]);
@@ -108,6 +111,8 @@ class EnrollmentController extends Controller
         }
 
         $enrollment->delete();
+
+        ActivityLog::log('Pelajar dikeluarkan dari kelas: ' . $course->title, 'courses', $course);
 
         return response()->json(['message' => 'Pelajar berhasil dikeluarkan dari kelas.']);
     }

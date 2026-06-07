@@ -2,27 +2,40 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Permission;
 use App\Models\Role;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
 class RoleController extends Controller
 {
     public function index()
     {
+        if (!Auth::user()->hasPermission('roles.view')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $roles = Role::withCount('users')->get();
         return view('roles.index', compact('roles'));
     }
 
     public function create()
     {
+        if (!Auth::user()->hasPermission('roles.create')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $permissions = Permission::orderBy('module')->orderBy('name')->get()->groupBy('module');
         return view('roles.form', compact('permissions'));
     }
 
     public function store(Request $request)
     {
+        if (!Auth::user()->hasPermission('roles.create')) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
         $validator = validator($request->all(), [
             'name'          => 'required|string|max:125|unique:roles,name',
             'description'   => 'nullable|string|max:255',
@@ -42,6 +55,8 @@ class RoleController extends Controller
 
         $role->permissions()->sync($request->permissions ?? []);
 
+        ActivityLog::log('Role baru dibuat: ' . $role->name, 'roles', $role);
+
         return response()->json([
             'message'  => 'Role berhasil ditambahkan.',
             'redirect' => route('roles.index'),
@@ -50,6 +65,10 @@ class RoleController extends Controller
 
     public function edit(Role $role)
     {
+        if (!Auth::user()->hasPermission('roles.edit')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $permissions = Permission::orderBy('module')->orderBy('name')->get()->groupBy('module');
         $role->load('permissions');
         return view('roles.form', compact('role', 'permissions'));
@@ -57,6 +76,9 @@ class RoleController extends Controller
 
     public function update(Request $request, Role $role)
     {
+        if (!Auth::user()->hasPermission('roles.edit')) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
         $validator = validator($request->all(), [
             'name'          => ['required', 'string', 'max:125', Rule::unique('roles')->ignore($role->id)],
             'description'   => 'nullable|string|max:255',
@@ -75,6 +97,8 @@ class RoleController extends Controller
 
         $role->permissions()->sync($request->permissions ?? []);
 
+        ActivityLog::log('Role diperbarui: ' . $role->name, 'roles', $role);
+
         return response()->json([
             'message'  => 'Role berhasil diupdate.',
             'redirect' => route('roles.index'),
@@ -83,7 +107,12 @@ class RoleController extends Controller
 
     public function destroy(Role $role)
     {
+        if (!Auth::user()->hasPermission('roles.delete')) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+
         $role->delete();
+        ActivityLog::log('Role dihapus: ' . $role->name, 'roles');
         return response()->json(['message' => 'Role berhasil dihapus.']);
     }
 }

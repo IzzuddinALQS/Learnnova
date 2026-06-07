@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Course;
 use App\Models\Role;
 use App\Models\Syllabus;
@@ -83,6 +84,8 @@ class CourseController extends Controller
 
         // Sync ke pivot — pengajar pertama is_primary = true
         $this->syncInstructors($course, $validated['instructor_ids']);
+
+        ActivityLog::log('Kelas baru dibuat: ' . $course->title, 'courses', $course);
 
         return response()->json([
             'message'  => 'Kelas berhasil dibuat.',
@@ -170,6 +173,8 @@ class CourseController extends Controller
         // Sync pivot
         $this->syncInstructors($course, $validated['instructor_ids']);
 
+        ActivityLog::log('Kelas diperbarui: ' . $course->title, 'courses', $course);
+
         return response()->json([
             'message'  => 'Kelas berhasil diperbarui.',
             'redirect' => route('courses.index'),
@@ -184,6 +189,8 @@ class CourseController extends Controller
 
         $course = Course::findOrFail($id);
         $course->delete();
+
+        ActivityLog::log('Kelas dihapus: ' . $course->title, 'courses');
 
         return response()->json(['message' => 'Kelas berhasil dihapus.']);
     }
