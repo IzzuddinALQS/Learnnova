@@ -98,52 +98,7 @@
                                     </span>
                                 </div>
                             </div>
-                            @if(!$isPengajar)
-
-    <div class="mt-2 d-flex align-items-center flex-wrap" style="gap:8px">
-
-        {{-- Bookmark --}}
-        <button type="button"
-                class="btn btn-sm btnBookmark {{ $isBookmarked ? 'btn-warning' : 'btn-outline-warning' }}"
-                data-url="{{ route('courses.materials.bookmark', [$course->id, $material->id]) }}"
-                data-material-id="{{ $material->id }}"
-                data-bookmarked="{{ $isBookmarked ? '1' : '0' }}">
-
-            <i class="fas fa-bookmark"></i>
-
-            <span class="bookmarkText">
-                {{ $isBookmarked ? 'Bookmarked' : 'Bookmark' }}
-            </span>
-
-        </button>
-
-        {{-- Progress --}}
-        <button type="button"
-                id="btnComplete"
-                class="btn btn-sm {{ ($progress?->is_completed ?? false) ? 'btn-success' : 'btn-outline-success' }}"
-                data-url="{{ route('courses.materials.progress', [$course->id, $material->id]) }}">
-
-            <i class="fas fa-check-circle"></i>
-
-            <span id="completeText">
-                {{ ($progress?->is_completed ?? false) ? 'Selesai' : 'Tandai Selesai' }}
-            </span>
-
-        </button>
-
-    </div>
-
-    <div class="progress mt-2" style="height:20px;">
-        <div id="progressBar"
-             class="progress-bar bg-success"
-             role="progressbar"
-             style="width: {{ ($progress?->is_completed ?? false) ? 100 : 0 }}%">
-            {{ ($progress?->is_completed ?? false) ? '100%' : '0%' }}
-        </div>
-    </div>
-
-@endif
-
+    
                             {{-- Pengajar actions --}}
                             @if($isPengajar)
                             <div class="d-flex" style="gap:6px">
@@ -338,22 +293,6 @@
                                 </a>
                             @endif
 
-                            {{-- Mark complete (pelajar) --}}
-                            @if($isEnrolled && !$isPengajar)
-                                <button type="button" id="btnMarkComplete"
-                                        class="btn btn-sm {{ $progress && $progress->is_completed ? 'btn-outline-success' : 'btn-success' }}"
-                                        data-material-id="{{ $material->id }}"
-                                        data-completed="{{ $progress && $progress->is_completed ? '1' : '0' }}">
-                                    @if($progress && $progress->is_completed)
-                                        <i class="fas fa-check-circle mr-1"></i> Selesai
-                                    @else
-                                        <i class="far fa-circle mr-1"></i> Tandai Selesai
-                                    @endif
-                                </button>
-                            @else
-                                <span></span>
-                            @endif
-
                             {{-- Next --}}
                             @if($nextMaterial)
                                 <a id="btnNext"
@@ -377,23 +316,24 @@
             {{-- Sidebar: navigasi materi --}}
             <div class="col-lg-3">
 
-                {{-- Bookmark (pelajar enrolled) --}}
-                @if($isEnrolled && !$isPengajar)
-                <div class="card card-outline card-warning mb-3">
-                    <div class="card-body py-2 text-center">
-                        <button type="button" class="btn btn-sm btn-block btnBookmark"
-                                data-url="{{ route('courses.materials.bookmark', [$course->id, $material->id]) }}"
-                                data-material-id="{{ $material->id }}"
-                                data-bookmarked="{{ $isBookmarked ? '1' : '0' }}">
-                            @if($isBookmarked)
-                                <i class="fas fa-bookmark mr-1"></i>Hapus Bookmark
-                            @else
-                                <i class="far fa-bookmark mr-1"></i>Tambah Bookmark
-                            @endif
-                        </button>
-                    </div>
-                </div>
-                @endif
+                {{--
+@if($isEnrolled && !$isPengajar)
+<div class="card card-outline card-warning mb-3">
+    <div class="card-body py-2 text-center">
+        <button type="button" class="btn btn-sm btn-block btnBookmark"
+                data-url="{{ route('courses.materials.bookmark', [$course->id, $material->id]) }}"
+                data-material-id="{{ $material->id }}"
+                data-bookmarked="{{ $isBookmarked ? '1' : '0' }}">
+            @if($isBookmarked)
+                <i class="fas fa-bookmark mr-1"></i>Hapus Bookmark
+            @else
+                <i class="far fa-bookmark mr-1"></i>Bookmark
+            @endif
+        </button>
+    </div>
+</div>
+@endif
+--}}
 
                 {{-- Daftar Materi per Bab --}}
                 <div class="card">

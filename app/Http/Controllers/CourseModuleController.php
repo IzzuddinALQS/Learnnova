@@ -69,13 +69,43 @@ class CourseModuleController extends Controller
                 ->pluck('material_id')
                 ->toArray();
         }
+        
+        // Calculate global course progress
+$courseProgress = [
+    'total' => 0,
+    'completed' => 0,
+    'percentage' => 0,
+];
 
+if ($isEnrolled && !$isPengajar) {
+
+    $allMaterialIds = $modules
+        ->flatMap(fn($m) => $m->materials->pluck('id'));
+
+    $courseProgress['total'] = $allMaterialIds->count();
+
+    if ($courseProgress['total'] > 0) {
+
+        $courseProgress['completed'] = MaterialProgress::where(
+            'student_id',
+            Auth::id()
+        )
+        ->whereIn('material_id', $allMaterialIds)
+        ->where('is_completed', true)
+        ->count();
+
+        $courseProgress['percentage'] = round(
+            ($courseProgress['completed'] / $courseProgress['total']) * 100
+        );
+    }
+}
         return view('materials.index', compact(
             'course',
             'modules',
             'isEnrolled',
             'isPengajar',
             'moduleProgress',
+            'courseProgress',
             'completedMaterialIds'
         ));
     }
