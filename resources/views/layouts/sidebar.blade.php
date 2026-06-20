@@ -190,13 +190,15 @@
     </a>
 </li>
 
+@if(auth()->check() && (auth()->user()->hasPermission('certificates.manage') || auth()->user()->hasRole('pelajar')))
 <li class="nav-item">
-    <a href="{{ url('/certificates') }}"
+    <a href="{{ route('certificates.index') }}"
        class="nav-link {{ request()->is('certificates*') ? 'active' : '' }}">
         <i class="nav-icon fas fa-certificate"></i>
-        <p>Sertifikat Saya</p>
+        <p>{{ auth()->user()->hasPermission('certificates.manage') ? 'Validasi Sertifikat' : 'Sertifikat Saya' }}</p>
     </a>
 </li>
+@endif
 
                 {{-- ADMINISTRASI — super_admin --}}
                 @if(auth()->check() && auth()->user()->hasRole('super_admin'))

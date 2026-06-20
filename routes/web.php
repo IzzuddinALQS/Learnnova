@@ -10,6 +10,7 @@ use App\Http\Controllers\CourseController;
 use App\Http\Controllers\SyllabusController;
 use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\CourseModuleController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\MaterialController;
@@ -51,6 +52,12 @@ Route::middleware('auth')->group(function () {
     Route::get('assignments/{assignment}/submissions', [AssignmentController::class, 'submissions'])->name('assignments.submissions');
     Route::get('assignments/{assignment}/submissions/{submission}', [AssignmentController::class, 'gradeForm'])->name('assignments.grade.form');
     Route::post('assignments/{assignment}/submissions/{submission}', [AssignmentController::class, 'grade'])->name('assignments.grade');
+
+    // Certificates
+    Route::get('/certificates', [CertificateController::class, 'index'])->name('certificates.index');
+    Route::post('/certificates/signer', [CertificateController::class, 'saveSigner'])->name('certificates.signer.save');
+    Route::post('/certificates/issue', [CertificateController::class, 'issue'])->name('certificates.issue');
+    Route::get('/certificates/{certificate}/print', [CertificateController::class, 'print'])->name('certificates.print');
 
     // Notifications
     Route::post('/notifications/{id}/read', function ($id) {
