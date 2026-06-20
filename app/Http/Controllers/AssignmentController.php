@@ -118,6 +118,8 @@ class AssignmentController extends Controller
 
         $assignment = Assignment::create($data);
 
+        event(new \App\Events\AssignmentCreated($assignment));
+
         ActivityLog::log("Membuat tugas baru: {$assignment->title}", $assignment, $assignment->toArray(), 'assignment');
 
         return response()->json([

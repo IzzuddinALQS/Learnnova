@@ -63,7 +63,11 @@ class AnnouncementController extends Controller
         $data['published_at'] = $data['is_published'] && empty($data['published_at']) ? now() : $data['published_at'];
         $data['created_by'] = $user->id;
 
-        Announcement::create($data);
+        $announcement = Announcement::create($data);
+
+        if ($announcement->is_published) {
+            event(new \App\Events\AnnouncementCreated($announcement));
+        }
 
         return redirect()->route('announcements.index')
             ->with('success', 'Pengumuman berhasil disimpan.');

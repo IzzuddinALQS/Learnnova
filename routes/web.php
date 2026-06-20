@@ -68,10 +68,27 @@ Route::middleware('auth')->group(function () {
     Route::get('/certificates/{certificate}/print', [CertificateController::class, 'print'])->name('certificates.print');
 
     // Notifications
+    Route::get('/notifications', function () {
+        $notifications = Auth::user()->notifications()->latest()->take(10)->get();
+        $unreadCount = Auth::user()->unreadNotifications()->count();
+        return response()->json([
+            'notifications' => $notifications,
+            'unread_count' => $unreadCount
+        ]);
+    })->name('notifications.index');
+
     Route::post('/notifications/{id}/read', function ($id) {
         Auth::user()->notifications()->where('id', $id)->update(['read_at' => now()]);
         return response()->json(['success' => true]);
     })->name('notifications.read');
+
+    Route::post('/notifications/mark-all-read', function () {
+        Auth::user()->unreadNotifications()->update(['read_at' => now()]);
+        return response()->json(['success' => true]);
+    })->name('notifications.readAll');
+
+    Route::post('/web-push/subscribe', [App\Http\Controllers\PushSubscriptionController::class, 'subscribe'])->name('webpush.subscribe');
+    Route::post('/web-push/unsubscribe', [App\Http\Controllers\PushSubscriptionController::class, 'unsubscribe'])->name('webpush.unsubscribe');
 
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
 

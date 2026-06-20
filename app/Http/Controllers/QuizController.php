@@ -60,7 +60,9 @@ class QuizController extends Controller
         'passing_score' => 'nullable|numeric'
     ]);
 
-    Quiz::create($validated);
+    $quiz = Quiz::create($validated);
+
+    event(new \App\Events\QuizCreated($quiz));
 
     return response()->json([
         'message' => 'Quiz berhasil dibuat',

@@ -17,6 +17,28 @@
     {{-- Kanan: notifikasi + user dropdown + fullscreen + logout --}}
     <ul class="navbar-nav ml-auto">
 
+        <!-- Notifications Dropdown Menu -->
+        <li class="nav-item dropdown" id="notification-dropdown">
+            <a class="nav-link" data-toggle="dropdown" href="#" aria-expanded="false" title="Notifikasi">
+                <i class="far fa-bell"></i>
+                <span class="badge badge-warning navbar-badge" id="notification-badge" style="display: none; font-size: 0.6rem; padding: 2px 4px;">0</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right" style="min-width: 320px; max-width: 400px; border-radius: 8px;">
+                <span class="dropdown-item dropdown-header" id="notification-dropdown-header">0 Notifikasi</span>
+                <div class="dropdown-divider"></div>
+                <div id="notification-items-container" style="max-height: 280px; overflow-y: auto;">
+                    <div class="text-center p-3 text-muted" id="notification-empty-state">
+                        <i class="far fa-bell-slash mb-2" style="font-size: 1.5rem;"></i>
+                        <p class="mb-0 text-sm">Tidak ada notifikasi baru</p>
+                    </div>
+                </div>
+                <div class="dropdown-divider"></div>
+                <a href="javascript:void(0)" class="dropdown-item dropdown-footer text-center text-primary font-weight-bold" id="mark-all-read-btn">
+                    Tandai semua telah dibaca
+                </a>
+            </div>
+        </li>
+
         {{-- Fullscreen --}}
         <li class="nav-item">
             <a class="nav-link" data-widget="fullscreen" href="#" role="button" title="Fullscreen">
