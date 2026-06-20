@@ -28,11 +28,18 @@
         <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#"
                data-toggle="dropdown" role="button" style="gap:8px">
-                <div class="rounded-circle d-flex align-items-center justify-content-center text-white"
-                     style="width:28px;height:28px;font-size:.8rem;flex-shrink:0;
-                            background:#3490dc;font-weight:600">
-                    {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
-                </div>
+                @if(auth()->user()->avatar)
+                    <img src="{{ asset('storage/' . auth()->user()->avatar) }}"
+                         class="rounded-circle"
+                         style="width:28px;height:28px;object-fit:cover;flex-shrink:0;"
+                         alt="User Avatar">
+                @else
+                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white"
+                         style="width:28px;height:28px;font-size:.8rem;flex-shrink:0;
+                                background:#3490dc;font-weight:600">
+                        {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
+                    </div>
+                @endif
                 <span class="d-none d-md-inline">{{ auth()->user()->name ?? 'User' }}</span>
             </a>
             <div class="dropdown-menu dropdown-menu-right">

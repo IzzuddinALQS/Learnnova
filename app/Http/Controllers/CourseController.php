@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\ActivityLog;
 
 class CourseController extends Controller
 {
@@ -85,7 +86,11 @@ class CourseController extends Controller
         // Sync ke pivot — pengajar pertama is_primary = true
         $this->syncInstructors($course, $validated['instructor_ids']);
 
+<<<<<<< Updated upstream
         ActivityLog::log('Kelas baru dibuat: ' . $course->title, 'courses', $course);
+=======
+        ActivityLog::log("Membuat kelas baru: {$course->title}", $course, $course->toArray(), 'course');
+>>>>>>> Stashed changes
 
         return response()->json([
             'message'  => 'Kelas berhasil dibuat.',
@@ -173,7 +178,11 @@ class CourseController extends Controller
         // Sync pivot
         $this->syncInstructors($course, $validated['instructor_ids']);
 
+<<<<<<< Updated upstream
         ActivityLog::log('Kelas diperbarui: ' . $course->title, 'courses', $course);
+=======
+        ActivityLog::log("Memperbarui data kelas: {$course->title}", $course, $course->getChanges(), 'course');
+>>>>>>> Stashed changes
 
         return response()->json([
             'message'  => 'Kelas berhasil diperbarui.',
@@ -188,9 +197,14 @@ class CourseController extends Controller
         }
 
         $course = Course::findOrFail($id);
+        $title = $course->title;
         $course->delete();
 
+<<<<<<< Updated upstream
         ActivityLog::log('Kelas dihapus: ' . $course->title, 'courses');
+=======
+        ActivityLog::log("Menghapus kelas: {$title}", $course, ['title' => $title], 'course');
+>>>>>>> Stashed changes
 
         return response()->json(['message' => 'Kelas berhasil dihapus.']);
     }

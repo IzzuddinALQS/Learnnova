@@ -9,6 +9,12 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\SyllabusController;
 use App\Http\Controllers\AssignmentController;
+<<<<<<< Updated upstream
+=======
+use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\ActivityLogController;
+>>>>>>> Stashed changes
 use App\Http\Controllers\CourseModuleController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\MaterialController;
@@ -33,6 +39,9 @@ Route::middleware('auth')->group(function () {
     // Profile
     Route::get('/profile', [UserController::class, 'profile'])->name('profile');
     Route::post('/profile/update', [UserController::class, 'updateProfile'])->name('profile.update');
+
+    // Activity Logs
+    Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
 
     Route::resource('users', UserController::class);
     Route::resource('roles', RoleController::class);

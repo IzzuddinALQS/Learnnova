@@ -8,7 +8,9 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use App\Models\ActivityLog;
 
 class UserController extends Controller
 {
@@ -59,7 +61,11 @@ class UserController extends Controller
 
         $user->roles()->attach($request->role_id, ['model_type' => User::class]);
 
+<<<<<<< Updated upstream
         ActivityLog::log('User baru ditambahkan: ' . $user->name, 'users', $user);
+=======
+        ActivityLog::log("Menambahkan user baru: {$user->name} ({$user->email})", $user, $user->toArray(), 'user');
+>>>>>>> Stashed changes
 
         return response()->json([
             'message' => 'User berhasil ditambahkan.',
@@ -106,7 +112,11 @@ class UserController extends Controller
 
         $user->roles()->sync([$request->role_id => ['model_type' => User::class]]);
 
+<<<<<<< Updated upstream
         ActivityLog::log('User diperbarui: ' . $user->name, 'users', $user);
+=======
+        ActivityLog::log("Memperbarui data user: {$user->name} ({$user->email})", $user, $user->getChanges(), 'user');
+>>>>>>> Stashed changes
 
         return response()->json([
             'message' => 'User berhasil diupdate.',
@@ -116,54 +126,76 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
+<<<<<<< Updated upstream
         if (!Auth::user()->hasPermission('users.delete')) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
 
         $user->delete();
         ActivityLog::log('User dihapus: ' . $user->name, 'users');
+=======
+        $name = $user->name;
+        $email = $user->email;
+        $user->delete();
+        ActivityLog::log("Menghapus user: {$name} ({$email})", $user, ['name' => $name, 'email' => $email], 'user');
+>>>>>>> Stashed changes
         return response()->json(['message' => 'User berhasil dihapus.']);
     }
 
     public function profile()
-{
-    return view('profile');
+    {
+        $user = auth()->user()->load('roles');
+
+        return view('profile', compact('user'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = auth()->user();
+
+        $validator = validator($request->all(), [
+            'name'     => 'required|string|max:255',
+            'email'    => [
+                'required',
+                'email',
+                Rule::unique('users')->ignore($user->id),
+            ],
+            'phone'    => 'nullable|string|max:20',
+            'bio'      => 'nullable|string',
+            'avatar'   => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'password' => 'nullable|min:6|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        $data = [
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'phone'    => $request->phone,
+            'bio'      => $request->bio,
+            'password' => $request->password
+                ? Hash::make($request->password)
+                : $user->password,
+        ];
+
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+
+            $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
+        }
+
+        $user->update($data);
+
+        ActivityLog::log("Memperbarui data profil sendiri", $user, $user->getChanges(), 'user');
+
+        return redirect()
+            ->back()
+            ->with('success', 'Profile berhasil diperbarui.');
+    }
 }
-
-public function updateProfile(Request $request)
-{
-    $user = auth()->user();
-
-    $validator = validator($request->all(), [
-        'name'     => 'required|string|max:255',
-        'email'    => [
-            'required',
-            'email',
-            Rule::unique('users')->ignore($user->id)
-        ],
-        'phone'    => 'nullable|string|max:20',
-        'bio'      => 'nullable|string',
-        'password' => 'nullable|min:6|confirmed',
-    ]);
-
-    if ($validator->fails()) {
-        return back()
-            ->withErrors($validator)
-            ->withInput();
-    }
-
-    $user->update([
-        'name'     => $request->name,
-        'email'    => $request->email,
-        'phone'    => $request->phone,
-        'bio'      => $request->bio,
-        'password' => $request->password
-            ? Hash::make($request->password)
-            : $user->password,
-    ]);
-
-    return redirect()
-        ->back()
-        ->with('success', 'Profile berhasil diperbarui.');
-    }
-}   

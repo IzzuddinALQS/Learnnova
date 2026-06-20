@@ -6,7 +6,12 @@ use App\Models\ActivityLog;
 use App\Models\Syllabus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+<<<<<<< Updated upstream
 use App\Models\User;
+=======
+use Illuminate\Support\Facades\Storage;
+use App\Models\ActivityLog;
+>>>>>>> Stashed changes
 
 class SyllabusController extends Controller
 {
@@ -57,7 +62,17 @@ class SyllabusController extends Controller
             'created_by' => Auth::id(),
         ]));
 
+<<<<<<< Updated upstream
         ActivityLog::log('Silabus baru dibuat: ' . $syllabus->name, 'syllabus', $syllabus);
+=======
+        if ($request->hasFile('theme')) {
+            $data['theme'] = $request->file('theme')->store('syllabus/covers', 'public');
+        }
+
+        $syllabus = Syllabus::create($data);
+
+        ActivityLog::log("Membuat silabus baru: {$syllabus->name}", $syllabus, $syllabus->toArray(), 'syllabus');
+>>>>>>> Stashed changes
 
         return response()->json([
             'message'  => 'Silabus berhasil dibuat.',
@@ -114,6 +129,8 @@ class SyllabusController extends Controller
 
         ActivityLog::log('Silabus diperbarui: ' . $syllabu->name, 'syllabus', $syllabu);
 
+        ActivityLog::log("Memperbarui silabus: {$syllabu->name}", $syllabu, $syllabu->getChanges(), 'syllabus');
+
         return response()->json([
             'message'  => 'Silabus berhasil diperbarui.',
             'redirect' => route('syllabus.show', $syllabu->id),
@@ -126,9 +143,20 @@ class SyllabusController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+<<<<<<< Updated upstream
         $syllabu->delete();
 
         ActivityLog::log('Silabus dihapus: ' . $syllabu->name, 'syllabus');
+=======
+        if ($syllabu->theme && Storage::disk('public')->exists($syllabu->theme)) {
+            Storage::disk('public')->delete($syllabu->theme);
+        }
+
+        $name = $syllabu->name;
+        $syllabu->delete();
+
+        ActivityLog::log("Menghapus silabus: {$name}", $syllabu, ['name' => $name], 'syllabus');
+>>>>>>> Stashed changes
 
         return response()->json(['message' => 'Silabus berhasil dihapus.']);
     }
