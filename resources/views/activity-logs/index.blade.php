@@ -143,8 +143,15 @@
                                 <td>
                                     @if($log->user)
                                         <div class="d-flex align-items-center" style="gap:6px">
-                                            <img src="{{ asset('dist/img/user2-160x160.jpg') }}"
-                                                 class="img-circle" style="width:22px;height:22px;object-fit:cover">
+                                            @if($log->user->avatar)
+                                                <img src="{{ asset('storage/' . $log->user->avatar) }}"
+                                                     class="img-circle" style="width:22px;height:22px;object-fit:cover">
+                                            @else
+                                                <div class="img-circle d-flex align-items-center justify-content-center bg-secondary text-white font-weight-bold" 
+                                                     style="width:22px;height:22px;font-size:0.65rem;">
+                                                    {{ strtoupper(substr($log->user->name, 0, 1)) }}
+                                                </div>
+                                            @endif
                                             <span class="small">{{ $log->user->name }}</span>
                                         </div>
                                     @else
@@ -159,12 +166,22 @@
                                         —
                                     @endif
                                 </td>
-                                <td>
-                                    <button class="btn btn-xs btn-danger btn-delete-log"
-                                            data-url="{{ route('activity-logs.destroy', $log->id) }}"
-                                            title="Hapus log ini">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                <td class="text-center">
+                                    <div class="btn-group">
+                                        @if($log->properties && count($log->properties) > 0)
+                                            <button type="button" 
+                                                    class="btn btn-xs btn-info btn-view-properties" 
+                                                    data-properties='@json($log->properties)'
+                                                    title="Lihat Detail Properties">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        @endif
+                                        <button class="btn btn-xs btn-danger btn-delete-log"
+                                                data-url="{{ route('activity-logs.destroy', $log->id) }}"
+                                                title="Hapus log ini">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                             @empty
@@ -188,11 +205,39 @@
 
     </div>
 </section>
+
+    <!-- Modal Properties -->
+    <div class="modal fade" id="modal-properties" tabindex="-1" role="dialog" aria-labelledby="modalPropertiesLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title" id="modalPropertiesLabel"><i class="fas fa-info-circle mr-2 text-info"></i>Detail Properties / Metadata</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <pre class="bg-dark text-light p-3 rounded" style="max-height: 500px; overflow-y: auto; font-family: 'Courier New', Courier, monospace;"><code id="properties-code"></code></pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
 <script>
 $(function () {
+
+    // Tampilkan detail properties
+    $(document).on('click', '.btn-view-properties', function () {
+        let props = $(this).data('properties');
+        let formatted = JSON.stringify(props, null, 4);
+        $('#properties-code').text(formatted);
+        $('#modal-properties').modal('show');
+    });
 
     // Hapus satu log
     $(document).on('click', '.btn-delete-log', function () {
