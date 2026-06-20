@@ -34,7 +34,8 @@
 
                 <form id="syllabusForm"
                     action="{{ $editSyllabus ? route('syllabus.update', $editSyllabus->id) : route('syllabus.store') }}"
-                    method="POST">
+                    method="POST"
+                    enctype="multipart/form-data">
                     @csrf
                     @if ($editSyllabus)
                         @method('PUT')
@@ -80,45 +81,24 @@
                             </div>
                         </div>
 
-                        {{-- Instruktur --}}
+                        {{-- Gambar Cover --}}
                         <div class="form-group">
-                            <label>Instruktur <span class="text-danger">*</span></label>
-                            <select name="instructor_id"
-                                class="form-control select2 @error('instructor_id') is-invalid @enderror">
-                                <option value="">-- Pilih Instruktur --</option>
-                                @foreach ($instructors as $instructor)
-                                    <option value="{{ $instructor->id }}"
-                                        {{ old('instructor_id', $editSyllabus->instructor_id ?? '') == $instructor->id ? 'selected' : '' }}>
-                                        {{ $instructor->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('instructor_id')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-
-                        {{-- Tema / Cover --}}
-                        <div class="form-group">
-                            <label>Tema / Gambar Cover</label>
-                            <select name="theme" class="form-control select2 @error('theme') is-invalid @enderror">
-                                <option value="">-- Pilih Gambar --</option>
-                                @foreach ($images as $image)
-                                    <option value="{{ $image }}"
-                                        {{ old('theme', $editSyllabus->theme ?? '') == $image ? 'selected' : '' }}>
-                                        {{ $image }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <label>Gambar Cover</label>
+                            <div class="custom-file">
+                                <input type="file" name="theme" id="themeCover" accept="image/*"
+                                    class="custom-file-input @error('theme') is-invalid @enderror">
+                                <label class="custom-file-label" for="themeCover">Pilih gambar...</label>
+                            </div>
+                            <small class="text-muted">Format: JPG, JPEG, PNG, WEBP. Maks 2MB.</small>
                             @error('theme')
-                                <span class="invalid-feedback">{{ $message }}</span>
+                                <span class="invalid-feedback d-block">{{ $message }}</span>
                             @enderror
 
                             {{-- Preview gambar --}}
                             <div id="theme-preview" class="mt-2"
-                                style="{{ old('theme', $editSyllabus->theme ?? '') ? '' : 'display:none;' }}">
+                                style="{{ $editSyllabus?->theme ? '' : 'display:none;' }}">
                                 <img id="preview-img"
-                                    src="{{ old('theme', $editSyllabus->theme ?? '') ? asset('img/' . old('theme', $editSyllabus->theme ?? '')) : '' }}"
+                                    src="{{ $editSyllabus?->theme ? asset('storage/' . $editSyllabus->theme) : '' }}"
                                     alt="Preview"
                                     style="height: 120px; object-fit: cover; border-radius: 6px; border: 1px solid #dee2e6;">
                             </div>
@@ -127,7 +107,8 @@
                         {{-- Deskripsi --}}
                         <div class="form-group">
                             <label>Deskripsi <span class="text-danger">*</span></label>
-                            <textarea name="description" rows="5" class="form-control @error('description') is-invalid @enderror"
+                            <textarea name="description" rows="5"
+                                class="form-control @error('description') is-invalid @enderror"
                                 placeholder="Jelaskan isi dan tujuan silabus ini...">{{ old('description', $editSyllabus->description ?? '') }}</textarea>
                             @error('description')
                                 <span class="invalid-feedback">{{ $message }}</span>
@@ -154,24 +135,16 @@
 
 @push('scripts')
     <script>
-        $(document).ready(function() {
-            $('select[name="instructor_id"]').select2({
-                theme: 'bootstrap4',
-                placeholder: '-- Pilih Instruktur --'
-            });
-
-            $('select[name="theme"]').select2({
-                theme: 'bootstrap4',
-                placeholder: '-- Pilih Gambar --'
-            });
-
-            $('select[name="theme"]').on('change', function() {
-                const val = $(this).val();
-                if (val) {
-                    $('#preview-img').attr('src', '{{ asset('img') }}/' + val);
+        $(document).ready(function () {
+            $('#themeCover').on('change', function () {
+                const file = this.files[0];
+                if (file) {
+                    $('#preview-img').attr('src', URL.createObjectURL(file));
                     $('#theme-preview').show();
+                    $('.custom-file-label').text(file.name);
                 } else {
                     $('#theme-preview').hide();
+                    $('.custom-file-label').text('Pilih gambar...');
                 }
             });
         });

@@ -3,29 +3,78 @@
 namespace App\Http\Controllers;
 
 use App\Models\Assignment;
+use App\Models\AssignmentSubmission;
+use App\Models\Course;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-<<<<<<< Updated upstream
-=======
 use Illuminate\Support\Facades\Storage;
 use App\Notifications\AssignmentGradedNotification;
 use App\Models\ActivityLog;
->>>>>>> Stashed changes
 
 class AssignmentController extends Controller
 {
+    private function getInstructorCourses()
+    {
+        if (Auth::user()->hasRole('super_admin')) {
+            return Course::pluck('id');
+        }
+
+        return Course::where('instructor_id', Auth::id())
+            ->orWhereHas('instructors', fn($q) => $q->where('user_id', Auth::id()))
+            ->pluck('id');
+    }
+
+    private function authorizeAssignment(Assignment $assignment)
+    {
+        if (Auth::user()->hasRole('super_admin')) {
+            return;
+        }
+
+        if ($assignment->created_by !== Auth::id()) {
+            abort(403, 'Anda tidak memiliki akses ke tugas ini.');
+        }
+    }
+
     public function index()
     {
         if (!Auth::user()->hasPermission('assignments.view')) {
             abort(403, 'Unauthorized action.');
         }
 
-        return view('assignments.index');
+        // Pelajar
+        if (Auth::user()->hasRole('pelajar')) {
+            $enrolledCourseIds = Auth::user()->enrolledCourses()->pluck('courses.id');
+
+            $assignments = Assignment::with(['course', 'submissions' => function ($q) {
+                $q->where('student_id', Auth::id());
+            }])
+                ->whereIn('course_id', $enrolledCourseIds)
+                ->latest()
+                ->get();
+
+            return view('submissions.index', compact('assignments'));
+        }
+
+        // Super Admin
+        if (Auth::user()->hasRole('super_admin')) {
+            $assignments = Assignment::with('course')
+                ->withCount('submissions')
+                ->latest()
+                ->get();
+        } else {
+            // Pengajar
+            $courseIds   = $this->getInstructorCourses();
+            $assignments = Assignment::with('course')
+                ->withCount('submissions')
+                ->whereIn('course_id', $courseIds)
+                ->where('created_by', Auth::id())
+                ->latest()
+                ->get();
+        }
+
+        return view('assignments.index', compact('assignments'));
     }
 
-<<<<<<< Updated upstream
-    public function show($id)
-=======
     public function create()
     {
         if (!Auth::user()->hasPermission('assignments.create')) {
@@ -78,17 +127,34 @@ class AssignmentController extends Controller
     }
 
     public function show(Assignment $assignment)
->>>>>>> Stashed changes
     {
         if (!Auth::user()->hasPermission('assignments.view')) {
             abort(403, 'Unauthorized action.');
         }
 
-        return view('assignments.detail-tugas');
+        // Pelajar
+        if (Auth::user()->hasRole('pelajar')) {
+            $enrolled = Auth::user()->enrolledCourses()->where('courses.id', $assignment->course_id)->exists();
+            if (!$enrolled) {
+                abort(403, 'Anda tidak terdaftar di kelas ini.');
+            }
+
+            $assignment->load('course');
+            $submission = AssignmentSubmission::where('assignment_id', $assignment->id)
+                ->where('student_id', Auth::id())
+                ->first();
+
+            return view('submissions.show', compact('assignment', 'submission'));
+        }
+
+        // Pengajar & Super Admin
+        $this->authorizeAssignment($assignment);
+        $assignment->load(['course', 'creator']);
+        $assignment->loadCount('submissions');
+
+        return view('assignments.show', compact('assignment'));
     }
 
-<<<<<<< Updated upstream
-=======
     public function edit(Assignment $assignment)
     {
         if (!Auth::user()->hasPermission('assignments.edit')) {
@@ -321,5 +387,4 @@ class AssignmentController extends Controller
             'redirect' => route('assignments.submissions', $assignment->id),
         ]);
     }
->>>>>>> Stashed changes
 }

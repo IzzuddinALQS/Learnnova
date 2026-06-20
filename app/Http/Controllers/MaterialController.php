@@ -151,6 +151,7 @@ class MaterialController extends Controller
                         ? route('courses.materials.destroy', [$courseId, $material->id])
                         : null,
                 ],
+                'bookmark_url' => route('courses.materials.bookmark', [$courseId, $material->id]),
                 'progress' => [
                     'is_completed'  => $progress?->is_completed ?? false,
                     'completed_at'  => $progress?->completed_at?->format('d M Y H:i'),
@@ -334,6 +335,19 @@ class MaterialController extends Controller
             'is_completed'  => $progress->is_completed,
             'last_position' => $progress->last_position,
         ]);
+    }
+
+    /**
+     * Show current student's bookmarked materials.
+     */
+    public function bookmarks()
+    {
+        $bookmarks = Bookmark::with(['material.module.course'])
+            ->where('student_id', Auth::id())
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('bookmarks.index', compact('bookmarks'));
     }
 
     /**

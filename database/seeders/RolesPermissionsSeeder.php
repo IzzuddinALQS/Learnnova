@@ -60,6 +60,7 @@ class RolesPermissionsSeeder extends Seeder
             ['name' => 'quizzes.create', 'module' => 'quizzes',     'description' => 'Buat quiz'],
             ['name' => 'quizzes.edit',   'module' => 'quizzes',     'description' => 'Edit quiz'],
             ['name' => 'quizzes.delete', 'module' => 'quizzes',     'description' => 'Hapus quiz'],
+            ['name' => 'quizzes.grade',  'module' => 'quizzes',     'description' => 'Nilai attempt quiz'],
             ['name' => 'quizzes.take',   'module' => 'quizzes',     'description' => 'Ikuti quiz (pelajar)'],
             // Forum
             ['name' => 'forum.view',     'module' => 'forum',       'description' => 'Lihat forum diskusi'],
@@ -104,8 +105,6 @@ class RolesPermissionsSeeder extends Seeder
             if (!$role) return;
 
             $permIds = Permission::whereIn('name', $permNames)->pluck('id');
-            // syncWithoutDetaching = tambah yang baru, tidak hapus yang lama
-            // sync = replace total (lebih predictable untuk seeder)
             $role->permissions()->sync($permIds);
         };
 
@@ -137,7 +136,7 @@ class RolesPermissionsSeeder extends Seeder
             'courses.view', 'courses.edit',
             'materials.view', 'materials.create', 'materials.edit', 'materials.delete',
             'assignments.view', 'assignments.create', 'assignments.edit', 'assignments.delete', 'assignments.grade',
-            'quizzes.view', 'quizzes.create', 'quizzes.edit', 'quizzes.delete',
+            'quizzes.view', 'quizzes.create', 'quizzes.edit', 'quizzes.delete', 'quizzes.grade',
             'forum.view', 'forum.post', 'forum.moderate',
             'schedules.view', 'schedules.manage',
             'attendance.view', 'attendance.manage',

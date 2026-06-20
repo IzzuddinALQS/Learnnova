@@ -38,9 +38,7 @@
                         <div class="card-body">
                             @php
                                 $imgUrl = $syllabus->theme
-                                    ? (Str::startsWith($syllabus->theme, ['http://', 'https://'])
-                                        ? $syllabus->theme
-                                        : asset('img/' . $syllabus->theme))
+                                    ? asset('storage/' . $syllabus->theme)
                                     : asset('img/images.jpg');
                             @endphp
                             <img src="{{ $imgUrl }}" alt="{{ $syllabus->name }}"
@@ -85,10 +83,6 @@
                                 <tr>
                                     <td class="text-muted pl-3">Digunakan</td>
                                     <td class="font-weight-bold">{{ $syllabus->courses_count }} kelas</td>
-                                </tr>
-                                <tr>
-                                    <td class="text-muted pl-3">Instruktur</td>
-                                    <td class="font-weight-bold">{{ optional($syllabus->instructor)->name ?? '-' }}</td>
                                 </tr>
                                 <tr>
                                     <td class="text-muted pl-3">Dibuat oleh</td>

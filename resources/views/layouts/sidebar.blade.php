@@ -120,6 +120,13 @@
                         <p>Materi</p>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="{{ route('bookmarks.index') }}"
+                       class="nav-link {{ request()->routeIs('bookmarks.index') ? 'active' : '' }}">
+                        <i class="nav-icon fas fa-bookmark"></i>
+                        <p>Bookmark Saya</p>
+                    </a>
+                </li>
 
                 @if(auth()->user()->hasPermission('assignments.view'))
                 <li class="nav-item">
