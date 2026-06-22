@@ -6,25 +6,28 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('assignments', function (Blueprint $table) {
-            $table->string('file')->nullable()->after('max_score');
-            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete()->after('file');
+            if (!Schema::hasColumn('assignments', 'file')) {
+                $table->string('file')->nullable()->after('max_score');
+            }
+            if (!Schema::hasColumn('assignments', 'created_by')) {
+                $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete()->after('file');
+            }
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('assignments', function (Blueprint $table) {
-            $table->dropForeign(['created_by']);
-            $table->dropColumn(['file', 'created_by']);
+            if (Schema::hasColumn('assignments', 'created_by')) {
+                $table->dropForeign(['created_by']);
+                $table->dropColumn('created_by');
+            }
+            if (Schema::hasColumn('assignments', 'file')) {
+                $table->dropColumn('file');
+            }
         });
     }
 };

@@ -21,6 +21,7 @@ use App\Http\Controllers\QuizController;
 use App\Http\Controllers\QuizAttemptController;
 use App\Http\Controllers\QuizQuestionController;
 use App\Http\Controllers\QuizOptionController;
+use App\Http\Controllers\GradebookController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -91,6 +92,19 @@ Route::middleware('auth')->group(function () {
     Route::post('/web-push/unsubscribe', [App\Http\Controllers\PushSubscriptionController::class, 'unsubscribe'])->name('webpush.unsubscribe');
 
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
+
+    // Gradebook
+    Route::get('/gradebook', [GradebookController::class, 'index'])->name('gradebook.index');
+    Route::get('/gradebook/export/pdf', [GradebookController::class, 'exportPdfStudent'])->name('gradebook.export.pdf');
+    Route::get('/gradebook/export/excel', [GradebookController::class, 'exportExcelStudent'])->name('gradebook.export.excel');
+    Route::get('/gradebook/{course}', [GradebookController::class, 'course'])->name('gradebook.course');
+    Route::get('/gradebook/{course}/export/pdf', [GradebookController::class, 'exportPdfCourse'])->name('gradebook.export.pdf.course');
+    Route::get('/gradebook/{course}/export/excel', [GradebookController::class, 'exportExcelCourse'])->name('gradebook.export.excel.course');
+
+    // Laporan Akademik Admin
+    Route::get('/academic-report', [GradebookController::class, 'academicReport'])->name('academic.report');
+    Route::get('/academic-report/export/excel', [GradebookController::class, 'exportExcelReport'])->name('academic.report.export.excel');
+    Route::get('/academic-report/export/pdf', [GradebookController::class, 'exportPdfReport'])->name('academic.report.export.pdf');
 
     // Quizzes
     Route::resource('quizzes', QuizController::class);

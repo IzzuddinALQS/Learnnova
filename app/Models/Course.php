@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
+use App\Models\Quiz;
+use App\Models\Assignment;
 
 class Course extends Model
 {
@@ -23,12 +25,16 @@ class Course extends Model
         'duration_weeks',
         'max_students',
         'published_at',
+        'assignment_weight', 
+        'quiz_weight',       
     ];
 
     protected $casts = [
-        'published_at' => 'datetime',
-        'duration_weeks' => 'integer',
-        'max_students' => 'integer',
+        'published_at'      => 'datetime',
+        'duration_weeks'    => 'integer',
+        'max_students'      => 'integer',
+        'assignment_weight' => 'integer', 
+        'quiz_weight'       => 'integer', 
     ];
 
     /**
@@ -103,5 +109,15 @@ class Course extends Model
             ->where('student_id', $userId)
             ->where('status', 'active')
             ->exists();
+    }
+
+    public function quizzes()
+    {
+        return $this->hasMany(Quiz::class);
+    }
+
+    public function assignments()
+    {
+        return $this->hasMany(Assignment::class);
     }
 }
