@@ -92,35 +92,167 @@
                 @endif
                 <h5 class="mb-3 font-weight-bold">Kursus Aktif</h5>
                 <div class="row">
-                    @if(Auth::user()->hasRole('pengajar'))
-                        <div class="col-md-4 mb-4">
-                            <div class="card shadow-sm border-0 h-100" style="border-radius: 15px;">
-                                <div class="card-body">
-                                    <h6 class="text-uppercase text-muted">Kelas Terbit</h6>
-                                    <h3 class="font-weight-bold">{{ $pengajarStats['published_courses'] }}</h3>
-                                    <p class="mb-0 text-muted">Kelas aktif yang kamu ajar</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-4">
-                            <div class="card shadow-sm border-0 h-100" style="border-radius: 15px;">
-                                <div class="card-body">
-                                    <h6 class="text-uppercase text-muted">Siswa Aktif</h6>
-                                    <h3 class="font-weight-bold">{{ $pengajarStats['active_students'] }}</h3>
-                                    <p class="mb-0 text-muted">Siswa terdaftar di kelas kamu</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-4">
-                            <div class="card shadow-sm border-0 h-100" style="border-radius: 15px;">
-                                <div class="card-body">
-                                    <h6 class="text-uppercase text-muted">Total Enroll</h6>
-                                    <h3 class="font-weight-bold">{{ $pengajarStats['active_enrollments'] }}</h3>
-                                    <p class="mb-0 text-muted">Pendaftaran siswa di semua kelas kamu</p>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
+                   @if(Auth::user()->hasRole('pengajar'))
+
+<div class="col-md-4 mb-4">
+
+    <div class="card shadow-sm border-0 h-100" style="border-radius:15px;">
+
+        <div class="card-body">
+
+            <h6 class="text-uppercase text-muted">
+
+                Kelas Terbit
+
+            </h6>
+
+            <h3 class="font-weight-bold">
+
+                {{ $pengajarStats['published_courses'] }}
+
+            </h3>
+
+            <p class="mb-0 text-muted">
+
+                Kelas aktif yang kamu ajar
+
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="col-md-4 mb-4">
+
+    <div class="card shadow-sm border-0 h-100" style="border-radius:15px;">
+
+        <div class="card-body">
+
+            <h6 class="text-uppercase text-muted">
+
+                Siswa Aktif
+
+            </h6>
+
+            <h3 class="font-weight-bold">
+
+                {{ $pengajarStats['active_students'] }}
+
+            </h3>
+
+            <p class="mb-0 text-muted">
+
+                Siswa terdaftar di kelas kamu
+
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="col-md-4 mb-4">
+
+    <div class="card shadow-sm border-0 h-100" style="border-radius:15px;">
+
+        <div class="card-body">
+
+            <h6 class="text-uppercase text-muted">
+
+                Total Enroll
+
+            </h6>
+
+            <h3 class="font-weight-bold">
+
+                {{ $pengajarStats['active_enrollments'] }}
+
+            </h3>
+
+            <p class="mb-0 text-muted">
+
+                Pendaftaran siswa
+
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="col-md-4 mb-4">
+
+    <div class="card shadow-sm border-0 h-100" style="border-radius:15px;">
+
+        <div class="card-body">
+
+            <h6 class="text-uppercase text-muted">
+
+                Completion Rate
+
+            </h6>
+
+            <h3 class="font-weight-bold">
+
+                {{ $pengajarStats['completion_rate'] }}%
+
+            </h3>
+
+            <div class="progress progress-xs mb-2" style="border-radius: 4px; height: 8px;">
+                <div class="progress-bar bg-success" role="progressbar" style="width: {{ $pengajarStats['completion_rate'] }}%" aria-valuenow="{{ $pengajarStats['completion_rate'] }}" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+
+            <p class="mb-0 text-muted">
+
+                Penyelesaian materi
+
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="col-md-4 mb-4">
+
+    <div class="card shadow-sm border-0 h-100" style="border-radius:15px;">
+
+        <div class="card-body">
+
+            <h6 class="text-uppercase text-muted">
+
+                Total Views Materi
+
+            </h6>
+
+            <h3 class="font-weight-bold">
+
+                {{ $pengajarStats['material_views'] }}
+
+            </h3>
+
+            <p class="mb-0 text-muted">
+
+                Jumlah akses materi
+
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+@endif
 
                         @if(Auth::user()->hasRole('pelajar') || Auth::user()->hasRole('pengajar'))
                         @if(isset($courses) && $courses->isNotEmpty())

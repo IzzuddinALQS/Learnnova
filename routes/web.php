@@ -21,7 +21,11 @@ use App\Http\Controllers\QuizController;
 use App\Http\Controllers\QuizAttemptController;
 use App\Http\Controllers\QuizQuestionController;
 use App\Http\Controllers\QuizOptionController;
+<<<<<<< Updated upstream
 use App\Http\Controllers\GradebookController;
+=======
+use App\Http\Controllers\PimpinanDashboardController;
+>>>>>>> Stashed changes
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -37,6 +41,7 @@ Route::post('/register', [RegisterController::class, 'register']);
 // Protected routes
 Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/pimpinan/dashboard', [PimpinanDashboardController::class, 'index'])->name('pimpinan.dashboard');
 
     // Profile
     Route::get('/profile', [UserController::class, 'profile'])->name('profile');
