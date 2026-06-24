@@ -134,7 +134,7 @@
                             </a>
                         @endif
 
-                        @if(auth()->user()->hasPermission('quizzes.grade'))
+                        @if(auth()->user()->hasrole('pengajar'))
                             <a href="{{ route('quizzes.attempts.index', $quiz->id) }}"
                                class="btn btn-primary btn-sm">
                                 <i class="fas fa-clipboard-list"></i>

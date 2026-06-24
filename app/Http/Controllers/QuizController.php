@@ -6,126 +6,213 @@ use Illuminate\Http\Request;
 use App\Models\Quiz;
 use App\Models\Course;
 use Illuminate\Support\Facades\Auth;
+use App\Models\QuizAttempt;
 
 
-class QuizController extends Controller
-{
+    class QuizController extends Controller
+    {
     private function authorizeQuizManagement()
-{
-    if (
-        !auth()->user()->hasRole('super_admin') &&
-        !auth()->user()->hasRole('pengajar') &&
-        !auth()->user()->hasRole('akademik')
-    ) {
-        abort(403, 'Anda tidak memiliki akses.');
+    {
+        if (
+            !auth()->user()->hasRole('pengajar') &&
+            !auth()->user()->hasRole('akademik')
+        ) {
+            abort(403, 'Anda tidak memiliki akses.');
+        }
     }
-}
-    
-    public function index()
+
+    private function getTeacherCourses()
 {
-    $quizzes = Quiz::with('course')
-    ->withCount('questions')
-    ->latest()
-    ->get();
+    $user = Auth::user();
 
-    $totalQuiz = Quiz::count();
+    if ($user->hasRole('pengajar')) {
 
-    return view(
-    'quizzes.index', compact('quizzes','totalQuiz')
-    );
+        return Course::with('instructors')
+
+            ->whereHas('instructors', function ($query) use ($user) {
+
+                $query->where('users.id', $user->id);
+
+            })
+
+            ->orderBy('title')
+
+            ->get();
+    }
+
+    return Course::orderBy('title')->get();
 }
+        
+        public function index()
+    {
+        $quizzes = Quiz::with('course')
+        ->withCount('questions')
+        ->latest()
+        ->get();
 
-    
-    public function create()
+        $totalQuiz = Quiz::count();
+
+        return view(
+        'quizzes.index', compact('quizzes','totalQuiz')
+        );
+    }
+
+        
+        public function create()
 {
     $this->authorizeQuizManagement();
 
-    $courses = Course::all();
+    $courses = $this->getTeacherCourses();
 
     return view('quizzes.form', compact('courses'));
 }
 
-    
-    public function store(Request $request)
-{
-    $this->authorizeQuizManagement();
+        
+        public function store(Request $request)
+    {
+        $this->authorizeQuizManagement();
 
-    $validated = $request->validate([
-        'course_id' => 'required|exists:courses,id',
-        'title' => 'required|string|max:255',
-        'description' => 'nullable|string',
-        'deadline' => 'nullable|date',
-        'duration_minutes' => 'nullable|integer',
-        'max_attempts' => 'nullable|integer',
-        'passing_score' => 'nullable|numeric'
-    ]);
+        $validated = $request->validate([
+            'course_id' => 'required|exists:courses,id',
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'deadline' => 'nullable|date',
+            'duration_minutes' => 'nullable|integer',
+            'max_attempts' => 'nullable|integer',
+            'passing_score' => 'nullable|numeric'
+        ]);
+
+        $user = Auth::user();
+
+    if ($user->hasRole('pengajar')) {
+
+        $allowedCourses = $this->getTeacherCourses()
+
+    ->pluck('id')
+
+    ->toArray();
+
+        if (!in_array($validated['course_id'], $allowedCourses)) {
+
+            abort(403, 'Anda tidak dapat membuat quiz pada kelas ini.');
+        }
+    }
 
     Quiz::create($validated);
 
-    return response()->json([
-        'message' => 'Quiz berhasil dibuat',
-        'redirect' => route('quizzes.index')
-    ]);
-}
+        return response()->json([
+            'message' => 'Quiz berhasil dibuat',
+            'redirect' => route('quizzes.index')
+        ]);
+    }
 
 
-    public function show($id)
+        public function show($id)
 {
     $quiz = Quiz::with('course')->findOrFail($id);
 
-    return view('quizzes.show', compact('quiz'));
+    $attemptUsed = 0;
+
+    $attempts = collect();
+
+    if (auth()->user()->hasRole('pelajar')) {
+
+        $attempts = QuizAttempt::where(
+                'quiz_id',
+                $quiz->id
+            )
+
+            ->where(
+                'student_id',
+                auth()->id()
+            )
+
+            ->latest()
+
+            ->get();
+
+        $attemptUsed = $attempts->count();
+    }
+
+    return view(
+        'quizzes.show',
+
+        compact(
+            'quiz',
+            'attemptUsed',
+            'attempts'
+        )
+    );
 }
 
-    
-    public function edit($id)
-{
-    $this->authorizeQuizManagement();
+        
+        public function edit($id)
+    {
+        $this->authorizeQuizManagement();
 
-    $quiz = Quiz::findOrFail($id);
+        $quiz = Quiz::findOrFail($id);
 
-    $courses = Course::all();
+        $user = Auth::user();
 
-    return view('quizzes.form', compact('quiz', 'courses'));
-}
+        $courses = $this->getTeacherCourses();
 
-    public function update(Request $request, $id)
-{
-    $this->authorizeQuizManagement();
+        return view('quizzes.form', compact('quiz', 'courses'));
+    }
 
-    $quiz = Quiz::findOrFail($id);
+        public function update(Request $request, $id)
+    {
+        $this->authorizeQuizManagement();
 
-    $validated = $request->validate([
-        'course_id' => 'required|exists:courses,id',
-        'title' => 'required|string|max:255',
-        'description' => 'nullable|string',
-        'deadline' => 'nullable|date',
-        'duration_minutes' => 'nullable|integer',
-        'max_attempts' => 'nullable|integer',
-        'passing_score' => 'nullable|numeric'
-    ]);
+        $quiz = Quiz::findOrFail($id);
 
-    $quiz->update($validated);
+        $validated = $request->validate([
+            'course_id' => 'required|exists:courses,id',
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'deadline' => 'nullable|date',
+            'duration_minutes' => 'nullable|integer',
+            'max_attempts' => 'nullable|integer',
+            'passing_score' => 'nullable|numeric'
+        ]);
 
-    return response()->json([
-        'message' => 'Quiz berhasil diperbarui',
-        'redirect' => route('quizzes.index')
-    ]);
-}
+        $user = Auth::user();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
-{
-    $this->authorizeQuizManagement();
+    if ($user->hasRole('pengajar')) {
 
-    $quiz = Quiz::findOrFail($id);
+        $allowedCourses = $this->getTeacherCourses()
 
-    $quiz->delete();
+    ->pluck('id')
 
-    return redirect()
-        ->route('quizzes.index')
-        ->with('success', 'Quiz berhasil dihapus');
-}
+    ->toArray();
 
-}
+        if (!in_array($validated['course_id'], $allowedCourses)) {
+
+            abort(403, 'Anda tidak dapat mengubah quiz pada kelas ini.');
+        }
+    }
+
+        $quiz->update($validated);
+
+        return response()->json([
+            'message' => 'Quiz berhasil diperbarui',
+            'redirect' => route('quizzes.index')
+        ]);
+    }
+
+        /**
+         * Remove the specified resource from storage.
+         */
+        public function destroy($id)
+    {
+        $this->authorizeQuizManagement();
+
+        $quiz = Quiz::findOrFail($id);
+
+        $quiz->delete();
+
+        return redirect()
+            ->route('quizzes.index')
+            ->with('success', 'Quiz berhasil dihapus');
+    }
+
+    }
