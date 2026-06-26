@@ -13,11 +13,8 @@ return new class extends Migration
                 $table->string('file')->nullable()->after('max_score');
             }
             if (!Schema::hasColumn('assignments', 'created_by')) {
-<<<<<<< Updated upstream
                 $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete()->after('file');
-=======
                 $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
->>>>>>> Stashed changes
             }
         });
     }
