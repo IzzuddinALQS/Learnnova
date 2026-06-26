@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -24,9 +25,18 @@ class LoginController extends Controller
         ]);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $request->session()->regenerate();
-            return redirect()->intended(route('dashboard'));
-        }
+    $request->session()->regenerate();
+
+    $user = Auth::user();
+
+    ActivityLog::log('User login', 'auth');
+
+    if ($user->hasRole('pimpinan') && !$user->hasRole('super_admin') ) {
+        return redirect()->route('dashboard.pimpinan');
+    }
+
+    return redirect()->route('dashboard');
+}
 
         return back()->withErrors([
             'email' => 'Email atau password salah.',
@@ -35,6 +45,7 @@ class LoginController extends Controller
 
     public function logout(Request $request)
     {
+        ActivityLog::log('User logout', 'auth');
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

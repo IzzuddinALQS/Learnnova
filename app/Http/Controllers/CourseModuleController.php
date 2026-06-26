@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Course;
 use App\Models\CourseModule;
 use App\Models\MaterialProgress;
@@ -69,13 +70,43 @@ class CourseModuleController extends Controller
                 ->pluck('material_id')
                 ->toArray();
         }
+        
+        // Calculate global course progress
+$courseProgress = [
+    'total' => 0,
+    'completed' => 0,
+    'percentage' => 0,
+];
 
+if ($isEnrolled && !$isPengajar) {
+
+    $allMaterialIds = $modules
+        ->flatMap(fn($m) => $m->materials->pluck('id'));
+
+    $courseProgress['total'] = $allMaterialIds->count();
+
+    if ($courseProgress['total'] > 0) {
+
+        $courseProgress['completed'] = MaterialProgress::where(
+            'student_id',
+            Auth::id()
+        )
+        ->whereIn('material_id', $allMaterialIds)
+        ->where('is_completed', true)
+        ->count();
+
+        $courseProgress['percentage'] = round(
+            ($courseProgress['completed'] / $courseProgress['total']) * 100
+        );
+    }
+}
         return view('materials.index', compact(
             'course',
             'modules',
             'isEnrolled',
             'isPengajar',
             'moduleProgress',
+            'courseProgress',
             'completedMaterialIds'
         ));
     }
@@ -99,12 +130,14 @@ class CourseModuleController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        CourseModule::create([
+        $module = CourseModule::create([
             'course_id'   => $courseId,
             'title'       => $request->title,
             'description' => $request->description,
             'order'       => $request->order,
         ]);
+
+        ActivityLog::log('Bab baru ditambahkan: ' . $module->title, 'materials', $module);
 
         return response()->json([
             'message'  => 'Bab berhasil ditambahkan.',
@@ -137,6 +170,8 @@ class CourseModuleController extends Controller
             'order'       => $request->order,
         ]);
 
+        ActivityLog::log('Bab diperbarui: ' . $module->title, 'materials', $module);
+
         return response()->json([
             'message'  => 'Bab berhasil diperbarui.',
             'redirect' => route('courses.materials.index', $courseId),
@@ -153,6 +188,8 @@ class CourseModuleController extends Controller
         }
 
         $module->delete();
+
+        ActivityLog::log('Bab dihapus: ' . $module->title, 'materials');
 
         return response()->json(['message' => 'Bab berhasil dihapus.']);
     }

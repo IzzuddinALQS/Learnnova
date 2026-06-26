@@ -42,8 +42,34 @@
                 </div>
             </div>
             <div class="card-body p-0">
+                
+          @if($isEnrolled && !$isPengajar)
+<div class="card card-outline card-success mb-3">
+    <div class="card-body py-2">
 
+        <div class="d-flex justify-content-between align-items-center">
+            <strong>
+                <i class="fas fa-chart-line mr-1"></i>
+                Progress Kelas
+            </strong>
+
+            <strong>
+                {{ $courseProgress['completed'] }}/{{ $courseProgress['total'] }}
+                ({{ $courseProgress['percentage'] }}%)
+            </strong>
+        </div>
+
+        <div class="progress mt-2">
+            <div class="progress-bar bg-success"
+                 style="width: {{ $courseProgress['percentage'] }}%">
+            </div>
+        </div>
+
+    </div>
+</div>
+@endif
                 @forelse($modules as $module)
+
                 <div class="card card-outline card-secondary mb-0 border-left-0 border-right-0 border-top-0 rounded-0">
                     <div class="card-header bg-light py-2">
                         <div class="d-flex align-items-center justify-content-between flex-wrap">
@@ -56,40 +82,29 @@
                                 <small class="text-muted">{{ $module->description }}</small>
                                 @endif
                             </div>
-                            <div class="d-flex align-items-center" style="gap:6px">
-                                {{-- Progress bar untuk pelajar enrolled --}}
-                                @if($isEnrolled && !$isPengajar && isset($moduleProgress[$module->id]))
-                                @php $prog = $moduleProgress[$module->id]; @endphp
-                                <div class="mr-3" style="min-width:140px">
-                                    <small class="text-muted">
-                                        {{ $prog['completed'] }}/{{ $prog['total'] }} selesai
-                                        ({{ $prog['percentage'] }}%)
-                                    </small>
-                                    <div class="progress progress-xs mt-1">
-                                        <div class="progress-bar bg-success"
-                                             style="width: {{ $prog['percentage'] }}%"></div>
-                                    </div>
-                                </div>
-                                @endif
 
                                 @if($isPengajar)
-                                <button type="button"
-                                        class="btn btn-warning btn-xs btn-edit-bab"
-                                        data-id="{{ $module->id }}"
-                                        data-title="{{ $module->title }}"
-                                        data-description="{{ $module->description }}"
-                                        data-order="{{ $module->order }}"
-                                        data-url="{{ route('courses.modules.update', [$course->id, $module->id]) }}"
-                                        data-toggle="modal" data-target="#modalEditBab">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                                <button type="button"
-                                        class="btn btn-danger btn-xs btn-delete-bab"
-                                        data-url="{{ route('courses.modules.destroy', [$course->id, $module->id]) }}">
-                                    <i class="fas fa-trash"></i> Hapus
-                                </button>
-                                @endif
-                            </div>
+    <div class="d-inline-flex align-items-center">
+        <!-- Tombol Edit -->
+        <button type="button"
+                class="btn btn-warning btn-xs btn-edit-bab mr-1"
+                data-id="{{ $module->id }}"
+                data-title="{{ $module->title }}"
+                data-description="{{ $module->description }}"
+                data-order="{{ $module->order }}"
+                data-url="{{ route('courses.modules.update', [$course->id, $module->id]) }}"
+                data-toggle="modal" data-target="#modalEditBab">
+            <i class="fas fa-edit"></i> Edit
+        </button>
+
+        <!-- Tombol Hapus -->
+        <button type="button"
+                class="btn btn-danger btn-xs btn-delete-bab"
+                data-url="{{ route('courses.modules.destroy', [$course->id, $module->id]) }}">
+            <i class="fas fa-trash"></i> Hapus
+        </button>
+    </div>
+@endif
                         </div>
                     </div>
 

@@ -21,10 +21,18 @@
 
                         <div class="card-body box-profile text-center">
 
-                            <img
-                                class="profile-user-img img-fluid img-circle"
-                                src="https://i.pravatar.cc/150"
-                            >
+                            <div class="position-relative d-inline-block">
+                                <img
+                                    id="profile-preview"
+                                    class="profile-user-img img-fluid img-circle"
+                                    src="{{ auth()->user()->avatar ? asset('storage/' . auth()->user()->avatar) : 'https://i.pravatar.cc/150' }}"
+                                    alt="User profile picture"
+                                    style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #adb5bd;"
+                                >
+                                <label for="avatar-input" class="position-absolute" style="bottom: 0; right: 10px; background: #007bff; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.15); margin-bottom: 0;" title="Pilih Foto">
+                                    <i class="fas fa-camera"></i>
+                                </label>
+                            </div>
 
                             <h3 class="profile-username mt-3">
                                 {{ auth()->user()->name }}
@@ -137,7 +145,9 @@
                                     <input
                                         type="file"
                                         name="avatar"
+                                        id="avatar-input"
                                         class="form-control"
+                                        accept="image/*"
                                     >
                                 </div>
 
@@ -189,3 +199,31 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+    document.getElementById('avatar-input').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Validasi jenis file (harus gambar)
+            if (!file.type.startsWith('image/')) {
+                alert('Berkas harus berupa gambar (PNG, JPG, JPEG, WEBP).');
+                this.value = '';
+                return;
+            }
+            // Validasi ukuran file (maksimal 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                alert('Ukuran berkas maksimal adalah 2MB.');
+                this.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                document.getElementById('profile-preview').src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
+@endpush

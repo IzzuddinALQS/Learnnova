@@ -38,11 +38,7 @@
             <div class="row">
                 @forelse($data_syllabi as $item)
                     @php
-                        $imgUrl = $item->theme
-                            ? (Str::startsWith($item->theme, ['http://', 'https://'])
-                                ? $item->theme
-                                : asset('img/' . $item->theme))
-                            : asset('img/images.jpg');
+                        $imgUrl = $item->theme ? asset('storage/' . $item->theme) : asset('img/images.jpg');
                     @endphp
 
                     <div class="col-lg-4 col-md-6 mb-4">
@@ -57,8 +53,6 @@
                                     &nbsp;·&nbsp;
                                     <i class="fas fa-chalkboard mr-1"></i>{{ $item->courses_count }} kelas
                                     &nbsp;·&nbsp;
-                                    <i class="fas fa-user mr-1"></i>{{ $item->instructor->name ?? '-' }}
-                                    {{-- ← tambahkan --}}
                                 </small>
 
                                 @if ($item->description)

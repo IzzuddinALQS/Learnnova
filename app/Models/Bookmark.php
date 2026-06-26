@@ -7,9 +7,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Bookmark extends Model
 {
-    public $timestamps = false;
+    public $timestamps = true;
 
-    const CREATED_AT = 'created_at';
+    const UPDATED_AT = null;
+    
 
     protected $fillable = [
         'student_id',

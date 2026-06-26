@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -32,10 +34,18 @@ class RegisterController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        // 3. Langsung Login setelah daftar
+        // 3. Assign role pelajar secara otomatis
+        $pelajarRole = Role::where('name', 'pelajar')->first();
+        if ($pelajarRole) {
+            $user->roles()->attach($pelajarRole->id, ['model_type' => User::class]);
+        }
+
+        // 4. Langsung Login setelah daftar
         Auth::login($user);
 
-        // 4. Redirect ke Dashboard
+        ActivityLog::log('User baru terdaftar: ' . $user->name, 'auth', $user);
+
+        // 5. Redirect ke Dashboard
         return redirect()->route('dashboard')->with('success', 'Akun berhasil dibuat!');
     }
 }

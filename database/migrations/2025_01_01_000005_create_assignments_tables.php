@@ -15,6 +15,8 @@ return new class extends Migration
             $table->text('description');
             $table->timestamp('due_date');
             $table->unsignedInteger('max_score')->default(100);
+            $table->string('file')->nullable();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
             $table->softDeletes();
         });

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -19,14 +18,9 @@ class Syllabus extends Model
         'theme',
         'description',
         'duration_weeks',
-        'created_by',
-        'instructor_id', 
+        'created_by'
     ];
 
-    public function instructor(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'instructor_id');
-    }
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

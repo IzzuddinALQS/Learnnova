@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Bookmark;
 use App\Models\Course;
 use App\Models\CourseModule;
@@ -60,7 +61,7 @@ class MaterialController extends Controller
             $filePath = $request->file('file_path')->store("materials/{$type}", 'public');
         }
 
-        Material::create([
+        $material = Material::create([
             'module_id'        => $request->module_id,
             'title'            => $request->title,
             'type'             => $request->type,
@@ -70,6 +71,8 @@ class MaterialController extends Controller
             'order'            => $request->order,
             'is_preview'       => $request->boolean('is_preview'),
         ]);
+
+        ActivityLog::log('Materi baru ditambahkan: ' . $material->title, 'materials', $material);
 
         return response()->json([
             'message'  => 'Materi berhasil ditambahkan.',
@@ -148,6 +151,7 @@ class MaterialController extends Controller
                         ? route('courses.materials.destroy', [$courseId, $material->id])
                         : null,
                 ],
+                'bookmark_url' => route('courses.materials.bookmark', [$courseId, $material->id]),
                 'progress' => [
                     'is_completed'  => $progress?->is_completed ?? false,
                     'completed_at'  => $progress?->completed_at?->format('d M Y H:i'),
@@ -248,6 +252,8 @@ class MaterialController extends Controller
             'is_preview'       => $request->boolean('is_preview'),
         ]);
 
+        ActivityLog::log('Materi diperbarui: ' . $material->title, 'materials', $material);
+
         return response()->json([
             'message'  => 'Materi berhasil diperbarui.',
             'redirect' => route('courses.materials.index', $courseId),
@@ -270,6 +276,8 @@ class MaterialController extends Controller
 
         $material->delete();
 
+        ActivityLog::log('Materi dihapus: ' . $material->title, 'materials');
+
         return response()->json(['message' => 'Materi berhasil dihapus.']);
     }
 
@@ -278,6 +286,23 @@ class MaterialController extends Controller
      */
     public function progress(Request $request, $courseId, Material $material)
     {
+        // Hanya pelajar yang enrolled yang bisa update progress
+        if (!Auth::user()->hasPermission('materials.view')) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+
+        $isEnrolled = DB::table('enrollments')
+            ->where('course_id', $courseId)
+            ->where('student_id', Auth::id())
+            ->where('status', 'active')
+            ->exists();
+
+        $isPengajar = Auth::user()->hasPermission('materials.create');
+
+        if (!$isEnrolled && !$isPengajar) {
+            return response()->json(['message' => 'Anda belum terdaftar di kelas ini.'], 403);
+        }
+
         $validator = validator($request->all(), [
             'is_completed'  => 'boolean',
             'last_position' => 'nullable|integer|min:0',
@@ -313,10 +338,40 @@ class MaterialController extends Controller
     }
 
     /**
+     * Show current student's bookmarked materials.
+     */
+    public function bookmarks()
+    {
+        $bookmarks = Bookmark::with(['material.module.course'])
+            ->where('student_id', Auth::id())
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('bookmarks.index', compact('bookmarks'));
+    }
+
+    /**
      * Toggle bookmark for the current student.
      */
     public function bookmark(Request $request, $courseId, Material $material)
     {
+        // Hanya pelajar yang enrolled yang bisa bookmark
+        if (!Auth::user()->hasPermission('materials.view')) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+
+        $isEnrolled = DB::table('enrollments')
+            ->where('course_id', $courseId)
+            ->where('student_id', Auth::id())
+            ->where('status', 'active')
+            ->exists();
+
+        $isPengajar = Auth::user()->hasPermission('materials.create');
+
+        if (!$isEnrolled && !$isPengajar) {
+            return response()->json(['message' => 'Anda belum terdaftar di kelas ini.'], 403);
+        }
+
         $existing = Bookmark::where('student_id', Auth::id())
             ->where('material_id', $material->id)
             ->first();

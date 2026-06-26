@@ -44,6 +44,76 @@
 <!-- App Global JS -->
 <script src="{{ asset('js/app.js') }}"></script>
 
+{{-- Notifikasi untuk Pelajar --}}
+@auth
+    @if(Auth::user()->hasRole('pelajar'))
+        @php
+            $unreadNotifications = Auth::user()->unreadNotifications
+                ->where('type', 'App\Notifications\AssignmentGradedNotification');
+        @endphp
+
+        @foreach($unreadNotifications as $notif)
+            <div class="toast-notification shadow"
+                id="notif-{{ $notif->id }}"
+                style="
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    z-index: 9999;
+                    width: 350px;
+                    background: #fff;
+                    border-left: 4px solid #28a745;
+                    border-radius: 6px;
+                    padding: 16px;
+                    margin-bottom: 10px;
+                ">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="font-weight-bold text-success mb-1">
+                            <i class="fas fa-star mr-1"></i> Tugas Dinilai
+                        </div>
+                        <div class="text-sm text-muted mb-2">
+                            {{ $notif->data['message'] }}
+                        </div>
+                        <a href="{{ route('assignments.show', $notif->data['assignment_id']) }}"
+                            class="btn btn-success btn-xs"
+                            onclick="markRead('{{ $notif->id }}')">
+                            <i class="fas fa-eye mr-1"></i> Lihat Tugas
+                        </a>
+                    </div>
+                    <button onclick="markRead('{{ $notif->id }}')"
+                        style="background:none; border:none; font-size:18px; cursor:pointer; color:#aaa; margin-left:10px;">
+                        &times;
+                    </button>
+                </div>
+            </div>
+        @endforeach
+
+        <script>
+            function markRead(id) {
+                $('#notif-' + id).fadeOut(300, function () {
+                    $(this).remove();
+                });
+
+                $.ajax({
+                    url: '/notifications/' + id + '/read',
+                    type: 'POST',
+                    data: { _token: $('meta[name="csrf-token"]').attr('content') }
+                });
+            }
+
+            // Geser notif ke atas jika ada lebih dari satu
+            $(document).ready(function () {
+                let bottom = 20;
+                $('.toast-notification').each(function () {
+                    $(this).css('bottom', bottom + 'px');
+                    bottom += $(this).outerHeight() + 10;
+                });
+            });
+        </script>
+    @endif
+@endauth
+
 @stack('scripts')
 </body>
 </html>

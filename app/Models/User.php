@@ -60,6 +60,11 @@ class User extends Authenticatable
                     ->withTimestamps();
     }
 
+    public function certificates()
+    {
+        return $this->hasMany(Certificate::class, 'student_id');
+    }
+
     public function hasRole(string $role): bool
     {
         return $this->roles()->where('name', $role)->exists();

@@ -21,6 +21,50 @@
             </div>
         </div>
     </div>
+    <div class="d-flex justify-content-between">
+
+    <a href="{{ route('courses.materials.index', $course->id) }}"
+       class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i>
+        Daftar Materi
+    </a>
+
+    <div>
+
+        <button type="button"
+                class="btn btnBookmark {{ $isBookmarked ? 'btn-warning' : 'btn-outline-warning' }}"
+                data-url="{{ route('courses.materials.bookmark', [$course->id, $material->id]) }}">
+
+            <i class="fas fa-bookmark"></i>
+
+            <span class="bookmarkText">
+                {{ $isBookmarked ? 'Bookmarked' : 'Bookmark' }}
+            </span>
+
+        </button>
+
+        <button type="button"
+                id="btnMarkComplete"
+                data-url="{{ route('courses.materials.progress', [$course->id, $material->id]) }}"
+                data-material-id="{{ $material->id }}"
+                data-completed="{{ ($progress?->is_completed ?? false) ? '1' : '0' }}"
+                class="btn {{ ($progress?->is_completed ?? false) ? 'btn-success' : 'btn-outline-success' }}">
+
+            <i class="fas {{ ($progress?->is_completed ?? false) ? 'fa-check-circle' : 'fa-circle' }} mr-1"></i>
+
+            <span id="completeText">
+                {{ ($progress?->is_completed ?? false) ? 'Selesai' : 'Tandai Selesai' }}
+            </span>
+
+        </button>
+
+        <a href="{{ route('bookmarks.index') }}" class="btn btn-outline-primary ml-2">
+            <i class="fas fa-bookmark"></i> Daftar Bookmark
+        </a>
+
+    </div>
+
+</div>
 </div>
 
 <section class="content">
@@ -56,6 +100,7 @@
                                     </span>
                                 </div>
                             </div>
+    
                             {{-- Pengajar actions --}}
                             @if($isPengajar)
                             <div class="d-flex" style="gap:6px">
@@ -250,22 +295,6 @@
                                 </a>
                             @endif
 
-                            {{-- Mark complete (pelajar) --}}
-                            @if($isEnrolled && !$isPengajar)
-                                <button type="button" id="btnMarkComplete"
-                                        class="btn btn-sm {{ $progress && $progress->is_completed ? 'btn-outline-success' : 'btn-success' }}"
-                                        data-material-id="{{ $material->id }}"
-                                        data-completed="{{ $progress && $progress->is_completed ? '1' : '0' }}">
-                                    @if($progress && $progress->is_completed)
-                                        <i class="fas fa-check-circle mr-1"></i> Selesai
-                                    @else
-                                        <i class="far fa-circle mr-1"></i> Tandai Selesai
-                                    @endif
-                                </button>
-                            @else
-                                <span></span>
-                            @endif
-
                             {{-- Next --}}
                             @if($nextMaterial)
                                 <a id="btnNext"
@@ -289,23 +318,24 @@
             {{-- Sidebar: navigasi materi --}}
             <div class="col-lg-3">
 
-                {{-- Bookmark (pelajar enrolled) --}}
-                @if($isEnrolled && !$isPengajar)
-                <div class="card card-outline card-warning mb-3">
-                    <div class="card-body py-2 text-center">
-                        <button type="button" id="btnBookmark"
-                                class="btn btn-sm btn-block {{ $isBookmarked ? 'btn-warning' : 'btn-outline-warning' }}"
-                                data-material-id="{{ $material->id }}"
-                                data-bookmarked="{{ $isBookmarked ? '1' : '0' }}">
-                            @if($isBookmarked)
-                                <i class="fas fa-bookmark mr-1"></i>Hapus Bookmark
-                            @else
-                                <i class="far fa-bookmark mr-1"></i>Tambah Bookmark
-                            @endif
-                        </button>
-                    </div>
-                </div>
-                @endif
+                {{--
+@if($isEnrolled && !$isPengajar)
+<div class="card card-outline card-warning mb-3">
+    <div class="card-body py-2 text-center">
+        <button type="button" class="btn btn-sm btn-block btnBookmark"
+                data-url="{{ route('courses.materials.bookmark', [$course->id, $material->id]) }}"
+                data-material-id="{{ $material->id }}"
+                data-bookmarked="{{ $isBookmarked ? '1' : '0' }}">
+            @if($isBookmarked)
+                <i class="fas fa-bookmark mr-1"></i>Hapus Bookmark
+            @else
+                <i class="far fa-bookmark mr-1"></i>Bookmark
+            @endif
+        </button>
+    </div>
+</div>
+@endif
+--}}
 
                 {{-- Daftar Materi per Bab --}}
                 <div class="card">
@@ -554,18 +584,20 @@ $(document).ready(function () {
                 if ($btnMC.length) {
                     $btnMC.attr('data-material-id', mat.id).attr('data-completed', prog.is_completed ? '1' : '0');
                     if (prog.is_completed) {
-                        $btnMC.removeClass('btn-success').addClass('btn-outline-success')
+                        $btnMC.removeClass('btn-outline-success').addClass('btn-success')
                               .html('<i class="fas fa-check-circle mr-1"></i> Selesai');
                     } else {
-                        $btnMC.removeClass('btn-outline-success').addClass('btn-success')
+                        $btnMC.removeClass('btn-success').addClass('btn-outline-success')
                               .html('<i class="far fa-circle mr-1"></i> Tandai Selesai');
                     }
                 }
 
                 // Update bookmark
-                const $btnBM = $('#btnBookmark');
+                const $btnBM = $('.btnBookmark');
                 if ($btnBM.length) {
-                    $btnBM.attr('data-material-id', mat.id).attr('data-bookmarked', res.is_bookmarked ? '1' : '0');
+                    $btnBM.attr('data-url', res.bookmark_url)
+                          .attr('data-material-id', mat.id)
+                          .attr('data-bookmarked', res.is_bookmarked ? '1' : '0');
                     if (res.is_bookmarked) {
                         $btnBM.removeClass('btn-outline-warning').addClass('btn-warning')
                               .html('<i class="fas fa-bookmark mr-1"></i>Hapus Bookmark');
@@ -624,7 +656,7 @@ $(document).ready(function () {
     }
 
     // ── Intercept navigasi materi (sidebar + prev/next) ───────────────────
-    $(document).on('click', '[data-url]', function (e) {
+    $(document).on('click', 'a[data-url]', function (e) {
         e.preventDefault();
         // Pakai .attr() bukan .data() agar selalu baca dari DOM (bukan jQuery cache)
         loadMaterial($(this).attr('data-url'));
@@ -680,12 +712,22 @@ $(document).ready(function () {
             data: { _token: CSRF, is_completed: isCompleted ? 0 : 1 },
             success: function (res) {
                 btn.prop('disabled', false);
+                
+                let icon = $(`.sidebar-mat-item[data-id="${materialId}"]`).find('div.mr-2 i');
+                let isActive = $(`.sidebar-mat-item[data-id="${materialId}"]`).hasClass('bg-primary');
+
                 if (res.is_completed) {
-                    btn.data('completed', '1').removeClass('btn-success').addClass('btn-outline-success')
+                    btn.data('completed', '1').removeClass('btn-outline-success').addClass('btn-success')
                        .html('<i class="fas fa-check-circle mr-1"></i> Selesai');
+                       
+                    icon.removeClass('far fa-circle fas fa-play-circle text-muted text-white text-success')
+                        .addClass('fas fa-check-circle ' + (isActive ? 'text-white' : 'text-success'));
                 } else {
-                    btn.data('completed', '0').removeClass('btn-outline-success').addClass('btn-success')
+                    btn.data('completed', '0').removeClass('btn-success').addClass('btn-outline-success')
                        .html('<i class="far fa-circle mr-1"></i> Tandai Selesai');
+                       
+                    icon.removeClass('fas fa-check-circle text-success text-white')
+                        .addClass(isActive ? 'fas fa-play-circle text-white' : 'far fa-circle text-muted');
                 }
                 Swal.fire({ icon:'success', title:'Berhasil!', text: res.message,
                     toast:true, position:'top-end', timer:2000, showConfirmButton:false });
@@ -697,33 +739,58 @@ $(document).ready(function () {
         });
     });
 
-    // ── Bookmark ──────────────────────────────────────────────────────────
-    $(document).on('click', '#btnBookmark', function () {
-        const btn        = $(this);
-        const materialId = btn.data('material-id');
-        btn.prop('disabled', true);
-        $.ajax({
-            url: '/courses/' + courseId + '/materials/' + materialId + '/bookmark',
-            type: 'POST',
-            data: { _token: CSRF },
-            success: function (res) {
-                btn.prop('disabled', false);
-                if (res.is_bookmarked) {
-                    btn.data('bookmarked','1').removeClass('btn-outline-warning').addClass('btn-warning')
-                       .html('<i class="fas fa-bookmark mr-1"></i>Hapus Bookmark');
-                } else {
-                    btn.data('bookmarked','0').removeClass('btn-warning').addClass('btn-outline-warning')
-                       .html('<i class="far fa-bookmark mr-1"></i>Tambah Bookmark');
-                }
-                Swal.fire({ icon:'success', title:'Berhasil!', text: res.message,
-                    toast:true, position:'top-end', timer:2000, showConfirmButton:false });
-            },
-            error: function () {
-                btn.prop('disabled', false);
-                Swal.fire('Error', 'Gagal memperbarui bookmark.', 'error');
+$(document).on('click', '.btnBookmark', function(e) {
+    e.preventDefault();
+    
+    const btn = $(this).closest('.btnBookmark'); 
+    const url = btn.data('url');
+    
+    // Mengambil CSRF token dari meta tag bawaan Laravel di head HTML
+    const CSRF = $('meta[name="csrf-token"]').attr('content'); 
+
+    // Cek di console log apakah URL dan CSRF terbaca dengan benar
+    console.log('URL:', url);
+    console.log('CSRF Token:', CSRF);
+
+    if (!url) {
+        console.error('Atribut data-url tidak terbaca!');
+        return;
+    }
+
+    $.ajax({
+        url: url,
+        type: 'POST',
+        method: 'POST', 
+        headers: {
+            'X-CSRF-TOKEN': CSRF
+        },
+        success: function (res) {
+            console.log('Respon server:', res);
+
+            const statusBookmark = res.is_bookmarked !== undefined ? res.is_bookmarked : res.isBookmarked;
+
+            if (statusBookmark) {
+                btn.removeClass('btn-outline-warning')
+                   .addClass('btn-warning');
+                
+                // Mengubah teks spesifik di dalam tombol yang sedang diklik
+                btn.find('.bookmarkText').text('Bookmarked');
+            } else {
+                btn.removeClass('btn-warning')
+                   .addClass('btn-outline-warning');
+                
+                // Mengubah teks spesifik di dalam tombol yang sedang diklik
+                btn.find('.bookmarkText').text('Bookmark');
             }
-        });
+        },
+        error: function(xhr){
+            console.error('Terjadi error pada AJAX:', xhr.status, xhr.responseText);
+        }
     });
+});
+
+
+
 
     // ── Delete material ───────────────────────────────────────────────────
     ajaxDelete('.btn-delete-material', 'Hapus materi ini?');

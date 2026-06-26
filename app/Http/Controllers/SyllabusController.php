@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Syllabus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
+use Illuminate\Support\Facades\Storage;
+use App\Models\ActivityLog;
 
 class SyllabusController extends Controller
 {
@@ -16,7 +17,6 @@ class SyllabusController extends Controller
         }
 
         $data_syllabi = Syllabus::withCount('courses')
-            ->with('instructor')
             ->latest()
             ->get();
         return view('syllabus.index', compact('data_syllabi'));
@@ -28,10 +28,7 @@ class SyllabusController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $images = array_values(array_diff(scandir(public_path('img')), ['.', '..']));
-        $instructors = User::all(); 
-
-        return view('syllabus.form', compact('images', 'instructors'));
+        return view('syllabus.form');
     }
 
     public function store(Request $request)
@@ -42,19 +39,24 @@ class SyllabusController extends Controller
 
         $validator = validator($request->all(), [
             'name'           => 'required|string|max:255',
-            'theme'          => 'nullable|string|max:255',
+            'theme'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'description'    => 'required|string',
             'duration_weeks' => 'required|integer|min:1',
-            'instructor_id'  => 'required|exists:users,id',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        Syllabus::create(array_merge($validator->validated(), [
-            'created_by' => Auth::id(),
-        ]));
+        $data = array_merge($validator->validated(), ['created_by' => Auth::id()]);
+
+        if ($request->hasFile('theme')) {
+            $data['theme'] = $request->file('theme')->store('syllabus/covers', 'public');
+        }
+
+        $syllabus = Syllabus::create($data);
+
+        ActivityLog::log("Membuat silabus baru: {$syllabus->name}", $syllabus, $syllabus->toArray(), 'syllabus');
 
         return response()->json([
             'message'  => 'Silabus berhasil dibuat.',
@@ -69,7 +71,6 @@ class SyllabusController extends Controller
         }
 
         $syllabu->loadCount('courses');
-        $syllabu->load('instructor');
         return view('syllabus.show', ['syllabus' => $syllabu]);
     }
 
@@ -79,14 +80,7 @@ class SyllabusController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $images = array_values(array_diff(scandir(public_path('img')), ['.', '..']));
-        $instructors = User::all(); 
-
-        return view('syllabus.form', [
-            'syllabus'    => $syllabu,
-            'images'      => $images,
-            'instructors' => $instructors, 
-        ]);
+        return view('syllabus.form', ['syllabus' => $syllabu]);
     }
 
     public function update(Request $request, Syllabus $syllabu)
@@ -97,17 +91,29 @@ class SyllabusController extends Controller
 
         $validator = validator($request->all(), [
             'name'           => 'required|string|max:255',
-            'theme'          => 'nullable|string|max:255',
+            'theme'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'description'    => 'required|string',
             'duration_weeks' => 'required|integer|min:1',
-            'instructor_id'  => 'required|exists:users,id', 
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $syllabu->update($validator->validated());
+        $data = $validator->validated();
+
+        if ($request->hasFile('theme')) {
+            if ($syllabu->theme && Storage::disk('public')->exists($syllabu->theme)) {
+                Storage::disk('public')->delete($syllabu->theme);
+            }
+            $data['theme'] = $request->file('theme')->store('syllabus/covers', 'public');
+        } else {
+            unset($data['theme']);
+        }
+
+        $syllabu->update($data);
+
+        ActivityLog::log("Memperbarui silabus: {$syllabu->name}", $syllabu, $syllabu->getChanges(), 'syllabus');
 
         return response()->json([
             'message'  => 'Silabus berhasil diperbarui.',
@@ -121,7 +127,14 @@ class SyllabusController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        if ($syllabu->theme && Storage::disk('public')->exists($syllabu->theme)) {
+            Storage::disk('public')->delete($syllabu->theme);
+        }
+
+        $name = $syllabu->name;
         $syllabu->delete();
+
+        ActivityLog::log("Menghapus silabus: {$name}", $syllabu, ['name' => $name], 'syllabus');
 
         return response()->json(['message' => 'Silabus berhasil dihapus.']);
     }
