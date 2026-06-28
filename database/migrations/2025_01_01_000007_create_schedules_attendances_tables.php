@@ -23,13 +23,15 @@ return new class extends Migration
         Schema::create('attendances', function (Blueprint $table) {
             $table->id();
             $table->foreignId('schedule_id')->constrained()->cascadeOnDelete();
+            $table->date('attendance_date')->nullable();
             $table->foreignId('course_id')->constrained()->cascadeOnDelete();
             $table->foreignId('student_id')->constrained('users')->cascadeOnDelete();
             $table->enum('status', ['present', 'absent', 'late', 'excused'])->default('absent');
-            $table->string('note')->nullable();
+            $table->text('note')->nullable();
             $table->timestamp('recorded_at')->nullable()->useCurrent();
             $table->timestamps();
-            $table->unique(['schedule_id', 'student_id']);
+
+            $table->unique(['schedule_id', 'student_id', 'attendance_date']);
         });
     }
 

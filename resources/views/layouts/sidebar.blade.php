@@ -194,9 +194,10 @@
 
                     @if (auth()->user()->hasPermission('schedules.view'))
                         <li class="nav-item">
-                            <a href="{{ url('/schedules') }}"
-                                class="nav-link {{ request()->is('schedules*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-calendar-alt"></i>
+                            {{-- Jika Pengajar, arahkan ke daftar jadwal untuk memilih kelas yang ingin diabsen --}}
+                            <a href="{{ route('schedules.index') }}"
+                                class="nav-link {{ request()->is('schedules*') || request()->is('attendance*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-calendar-check"></i>
                                 <p>Jadwal & Absensi</p>
                             </a>
                         </li>

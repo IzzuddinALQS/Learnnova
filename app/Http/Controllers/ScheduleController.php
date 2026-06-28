@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Schedule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,6 +14,10 @@ class ScheduleController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        return view('schedules.index');
+        // Ambil semua jadwal dari database
+        $schedules = Schedule::all();
+
+        // Kirim data $schedules ke view 'schedules.index'
+        return view('schedules.index', compact('schedules'));
     }
 }
