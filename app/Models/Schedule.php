@@ -6,9 +6,32 @@ use Illuminate\Database\Eloquent\Model;
 
 class Schedule extends Model
 {
-    // Pastikan model ini merujuk ke tabel 'schedules'
     protected $table = 'schedules';
 
-    // Izinkan kolom-kolom ini untuk diakses
-    protected $fillable = ['course_id', 'title', 'description', 'start_time', 'end_time', 'location', 'type'];
+    protected $fillable = [
+        'course_id',
+        'user_id',
+        'day',
+        'title',
+        'description',
+        'start_time',
+        'end_time',
+        'location',
+        'type'
+    ];
+
+    public function course()
+    {
+        return $this->belongsTo(Course::class);
+    }
+
+    public function teacher()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
 }

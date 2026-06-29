@@ -78,7 +78,7 @@ Route::middleware('auth')->group(function () {
         return response()->json(['success' => true]);
     })->name('notifications.read');
 
-    Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
+    Route::resource('schedules', ScheduleController::class);
 
     // Attendance
     Route::get('/attendance/{scheduleId}', [AttendanceController::class, 'show'])->name('attendance.show');
