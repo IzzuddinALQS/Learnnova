@@ -23,8 +23,10 @@ use App\Http\Controllers\QuizQuestionController;
 use App\Http\Controllers\QuizOptionController;
 use App\Http\Controllers\GradebookController;
 use App\Http\Controllers\PimpinanDashboardController;
+use App\Http\Controllers\AttendanceController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 // Auth
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -76,7 +78,15 @@ Route::middleware('auth')->group(function () {
         return response()->json(['success' => true]);
     })->name('notifications.read');
 
-    Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
+    Route::resource('schedules', ScheduleController::class);
+
+    // Attendance
+    Route::get('/attendance/{scheduleId}', [AttendanceController::class, 'show'])->name('attendance.show');
+    Route::post('/attendance/store', [AttendanceController::class, 'store'])->name('attendance.store');
+    Route::get('/attendance/report/{scheduleId}', [AttendanceController::class, 'report'])->name('attendance.report');
+
+    Route::get('/attendance/report/{scheduleId}/export-csv', [AttendanceController::class, 'exportCsv'])
+        ->name('attendance.export.csv');
 
     // Gradebook
     Route::get('/gradebook', [GradebookController::class, 'index'])->name('gradebook.index');

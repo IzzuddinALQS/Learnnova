@@ -1,15 +1,22 @@
 @include('layouts.header')
-<!-- Navigasi -->
 @include('layouts.nav')
-<!-- Sidebar -->
 @include('layouts.sidebar')
-<!-- Content Wrapper. Contains page content -->
+
 <div class="content-wrapper">
 
-    <!-- Content -->
+    <div class="content-header">
+        <div class="container-fluid">
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas fa-check"></i> Berhasil!</h5>
+                    {{ session('success') }}
+                </div>
+            @endif
+        </div>
+    </div>
+
     @yield('content')
 
-    <!-- /.content -->
-</div>
-<!-- Footer -->
+    </div>
 @include('layouts.footer')

@@ -217,13 +217,18 @@
                                 @foreach($nilaiPerKelas as $courseId => $attempts)
                                     <div class="col-md-6 mb-4">
                                         <div class="card border shadow-none" style="border-radius: 12px; overflow: hidden;">
-                                            <div class="card-header bg-light py-2 px-3">
-                                                <h6 class="font-weight-bold mb-0 text-primary">
-                                                    {{ $attempts->first()->course_title }}
-                                                </h6>
-                                            </div>
+                                            <div class="card-header bg-light py-2 px-3 d-flex align-items-center">
+
+    <h6 class="font-weight-bold mb-0 text-primary flex-grow-1">
+        {{ $attempts->first()->course_title }}
+    </h6>
+
+    <div id="length-{{ $courseId }}" class="ml-auto"></div>
+
+</div>
+</div>
                                             <div class="card-body p-0">
-                                                <table class="table table-sm table-hover mb-0">
+                                                <table id="table-{{ $courseId }}" class="table table-sm table-hover kelasTable">
                                                     <thead>
                                                         <tr class="text-muted" style="font-size: 0.8rem;">
                                                             <th class="px-3">#</th>
@@ -254,6 +259,51 @@
     </div>
 </section>
 @endsection
+
+@push('styles')
+<style>
+.kelasTable_wrapper .dataTables_length{
+    margin:10px;
+}
+
+.kelasTable_wrapper .dataTables_filter{
+    display:none;
+}
+
+.kelasTable_wrapper .dataTables_info{
+    display:none;
+}
+
+.kelasTable_wrapper .dataTables_paginate{
+    margin-top:10px;
+}
+
+.kelas-scroll{
+    overflow-y:auto;
+}
+
+.dataTables_scrollHeadInner,
+.dataTables_scrollHeadInner table{
+    width:100% !important;
+}
+
+.dataTables_length{
+    margin:0;
+}
+
+.dataTables_length label{
+    margin-bottom:0;
+    font-weight:600;
+    font-size:14px;
+}
+
+.dataTables_paginate{
+    margin-top:10px;
+}
+
+</style>
+@endpush
+
 
 @push('scripts')
 <script>
@@ -310,5 +360,78 @@ $(function () {
         });
     @endif
 });
+
+$('.kelasTable').each(function () {
+
+    let table = $(this).DataTable({
+
+        pageLength: 10,
+
+        lengthMenu: [
+            [10,25,50,100,-1],
+            [10,25,50,100,"All"]
+        ],
+
+        searching:false,
+        ordering:false,
+        info:false,
+
+        paging:true,
+
+        scrollY:'350px',
+
+        scrollCollapse:true,
+
+        language:{
+            lengthMenu:"Show _MENU_"
+        }
+
+    });
+
+    // ===========================
+    // PINDAHKAN SHOW KE HEADER
+    // ===========================
+
+    let id = $(this).attr('id').replace('table-','');
+
+    $('#length-' + id).append(
+        $(table.table().container()).find('.dataTables_length')
+    );
+
+    // ===========================
+    // SCROLL JIKA >10
+    // ===========================
+
+    function updateScroll(){
+
+        let len = table.page.len();
+
+        let wrapper = $(table.table().container())
+            .find('.dataTables_scrollBody');
+
+        if(len == 10){
+
+            wrapper.css({
+                "max-height":"",
+                "overflow-y":"hidden"
+            });
+
+        }else{
+
+            wrapper.css({
+                "max-height":"350px",
+                "overflow-y":"auto"
+            });
+
+        }
+
+    }
+
+    table.on('length.dt', updateScroll);
+
+    updateScroll();
+
+});
+
 </script>
 @endpush
