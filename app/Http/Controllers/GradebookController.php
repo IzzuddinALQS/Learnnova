@@ -174,12 +174,10 @@ class GradebookController extends Controller
                 : (count($course->assignments) > 0 ? 0 : null);
 
             $finalScore = null;
-            if ($avgAssignment !== null && $avgQuiz !== null) {
-                $finalScore = round(($avgAssignment * $assignmentWeight) + ($avgQuiz * $quizWeight), 2);
-            } elseif ($avgAssignment !== null) {
-                $finalScore = $avgAssignment;
-            } elseif ($avgQuiz !== null) {
-                $finalScore = $avgQuiz;
+            if ($avgAssignment !== null || $avgQuiz !== null) {
+                $valAssignment = $avgAssignment ?? 0;
+                $valQuiz = $avgQuiz ?? 0;
+                $finalScore = round(($valAssignment * $assignmentWeight) + ($valQuiz * $quizWeight), 2);
             }
 
             $gradebook[] = [
@@ -257,12 +255,10 @@ class GradebookController extends Controller
                 : (count($course->assignments) > 0 ? 0 : null);
 
             $finalScore = null;
-            if ($avgAssignment !== null && $avgQuiz !== null) {
-                $finalScore = round(($avgAssignment * $assignmentWeight) + ($avgQuiz * $quizWeight), 2);
-            } elseif ($avgAssignment !== null) {
-                $finalScore = $avgAssignment;
-            } elseif ($avgQuiz !== null) {
-                $finalScore = $avgQuiz;
+            if ($avgAssignment !== null || $avgQuiz !== null) {
+                $valAssignment = $avgAssignment ?? 0;
+                $valQuiz = $avgQuiz ?? 0;
+                $finalScore = round(($valAssignment * $assignmentWeight) + ($valQuiz * $quizWeight), 2);
             }
 
             $gradebook[] = [

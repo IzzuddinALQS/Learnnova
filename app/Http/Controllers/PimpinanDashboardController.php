@@ -13,68 +13,71 @@ class PimpinanDashboardController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        // Total kelas terbit
+        $courses = \App\Models\Course::with(['assignments', 'quizzes.questions'])->where('status', 'published')->get();
+        $totalKelas = $courses->count();
+
+        $gradebookController = new \App\Http\Controllers\GradebookController();
+        $allStudentScores = [];
+
+        foreach ($courses as $course) {
+            $students = \App\Models\User::whereHas('enrollments', fn($q) => $q->where('course_id', $course->id)->where('status', 'active'))->get();
+            $courseGradebook = $gradebookController->buildCourseGradebook($course, $students);
+            foreach ($courseGradebook as $row) {
+                if ($row['final_score'] !== null) {
+                    $allStudentScores[] = [
+                        'course_id'    => $course->id,
+                        'course_title' => $course->title,
+                        'student_name' => $row['student']->name,
+                        'final_score'  => $row['final_score']
+                    ];
+                }
+            }
+        }
+
+        $validScores = collect($allStudentScores);
+
         // Rata-rata nilai per kelas (diurutkan tertinggi ke terendah)
-        $rataRata = DB::table('quiz_attempts')
-            ->join('quizzes', 'quiz_attempts.quiz_id', '=', 'quizzes.id')
-            ->join('courses', 'quizzes.course_id', '=', 'courses.id')
-            ->select(
-                'courses.id',
-                'courses.title',
-                DB::raw('ROUND(AVG(quiz_attempts.score), 2) as rata_rata')
-            )
-            ->groupBy('courses.id', 'courses.title')
-            ->orderByDesc('rata_rata')
-            ->get();
+        $rataRata = $validScores->groupBy('course_id')->map(function ($group) {
+            return (object)[
+                'id'        => $group->first()['course_id'],
+                'title'     => $group->first()['course_title'],
+                'rata_rata' => round($group->avg('final_score'), 2)
+            ];
+        })->sortByDesc('rata_rata')->values();
 
         // Nilai tertinggi secara keseluruhan (Top 10)
-        $nilaiTertinggi = DB::table('quiz_attempts')
-            ->join('users', 'quiz_attempts.student_id', '=', 'users.id')
-            ->join('quizzes', 'quiz_attempts.quiz_id', '=', 'quizzes.id')
-            ->join('courses', 'quizzes.course_id', '=', 'courses.id')
-            ->select(
-                'users.name as student_name',
-                'courses.title as course_title',
-                'quiz_attempts.score'
-            )
-            ->orderByDesc('quiz_attempts.score')
-            ->limit(10)
-            ->get();
+        $nilaiTertinggi = $validScores->sortByDesc('final_score')->take(10)->map(function ($item) {
+            return (object)[
+                'student_name' => $item['student_name'],
+                'course_title' => $item['course_title'],
+                'score'        => $item['final_score']
+            ];
+        })->values();
 
         // Nilai terendah secara keseluruhan (Bottom 10)
-        $nilaiTerendah = DB::table('quiz_attempts')
-            ->join('users', 'quiz_attempts.student_id', '=', 'users.id')
-            ->join('quizzes', 'quiz_attempts.quiz_id', '=', 'quizzes.id')
-            ->join('courses', 'quizzes.course_id', '=', 'courses.id')
-            ->select(
-                'users.name as student_name',
-                'courses.title as course_title',
-                'quiz_attempts.score'
-            )
-            ->orderBy('quiz_attempts.score')
-            ->limit(10)
-            ->get();
+        $nilaiTerendah = $validScores->sortBy('final_score')->take(10)->map(function ($item) {
+            return (object)[
+                'student_name' => $item['student_name'],
+                'course_title' => $item['course_title'],
+                'score'        => $item['final_score']
+            ];
+        })->values();
 
         // Nilai rata-rata keseluruhan
-        $rataKeseluruhan = DB::table('quiz_attempts')->avg('score') ?? 0;
-
-        // Total kelas terbit
-        $totalKelas = DB::table('courses')->where('status', 'published')->count();
+        $rataKeseluruhan = $validScores->count() > 0 ? round($validScores->avg('final_score'), 2) : 0;
 
         // Detail nilai per kelas (dari tertinggi ke terendah)
-        $nilaiPerKelas = DB::table('quiz_attempts')
-            ->join('users', 'quiz_attempts.student_id', '=', 'users.id')
-            ->join('quizzes', 'quiz_attempts.quiz_id', '=', 'quizzes.id')
-            ->join('courses', 'quizzes.course_id', '=', 'courses.id')
-            ->select(
-                'courses.id as course_id',
-                'courses.title as course_title',
-                'users.name as student_name',
-                'quiz_attempts.score'
-            )
-            ->orderBy('courses.id')
-            ->orderByDesc('quiz_attempts.score')
-            ->get()
-            ->groupBy('course_id');
+        $nilaiPerKelas = $validScores->groupBy('course_id')->map(function ($group) {
+            return $group->sortByDesc('final_score')->map(function ($item) {
+                return (object)[
+                    'course_id'    => $item['course_id'],
+                    'course_title' => $item['course_title'],
+                    'student_name' => $item['student_name'],
+                    'score'        => $item['final_score']
+                ];
+            })->values();
+        });
 
         return view('dashboard.pimpinan', compact(
             'rataRata',
