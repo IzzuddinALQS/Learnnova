@@ -226,7 +226,6 @@
     <div id="length-{{ $courseId }}" class="ml-auto"></div>
 
 </div>
-</div>
                                             <div class="card-body p-0">
                                                 <table id="table-{{ $courseId }}" class="table table-sm table-hover kelasTable">
                                                     <thead>

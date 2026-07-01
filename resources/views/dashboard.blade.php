@@ -225,9 +225,9 @@
             <div class="row mb-4">
                 <div class="col-md-12">
                     <div class="card shadow-sm border-0" style="border-radius: 15px;">
-                        <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center pt-3 pb-0">
-                            <h5 class="font-weight-bold text-dark mb-0">Pengumuman Terbaru</h5>
-                            <a href="{{ route('announcements.index') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Lihat Semua</a>
+                        <div class="card-header bg-transparent border-0 pt-3 pb-0">
+                            <h5 class="font-weight-bold text-dark mb-0 d-inline-block">Pengumuman Terbaru</h5>
+                            <a href="{{ route('announcements.index') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 float-right">Lihat Semua</a>
                         </div>
                         <div class="card-body">
                             @if(isset($latestAnnouncements) && count($latestAnnouncements) > 0)

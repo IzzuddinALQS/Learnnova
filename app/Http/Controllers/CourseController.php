@@ -66,6 +66,8 @@ class CourseController extends Controller
             'status'          => 'required|in:draft,published,archived',
             'duration_weeks'  => 'nullable|integer|min:1',
             'max_students'    => 'nullable|integer|min:1',
+            'assignment_weight' => 'required|integer|min:0|max:100',
+            'quiz_weight'       => 'required|integer|min:0|max:100',
             'thumbnail'       => 'nullable|image|max:2048',
         ]);
 
@@ -152,6 +154,8 @@ class CourseController extends Controller
             'status'          => 'required|in:draft,published,archived',
             'duration_weeks'  => 'nullable|integer|min:1',
             'max_students'    => 'nullable|integer|min:1',
+            'assignment_weight' => 'required|integer|min:0|max:100',
+            'quiz_weight'       => 'required|integer|min:0|max:100',
             'thumbnail'       => 'nullable|image|max:2048',
         ]);
 

@@ -185,6 +185,34 @@
                         </div>
                     </div>
 
+                    <div class="row">
+                        {{-- Bobot Tugas --}}
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Bobot Tugas (%) <span class="text-danger">*</span></label>
+                                <input type="number" name="assignment_weight" min="0" max="100"
+                                    class="form-control @error('assignment_weight') is-invalid @enderror"
+                                    value="{{ old('assignment_weight', $editCourse->assignment_weight ?? '60') }}">
+                                @error('assignment_weight')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+
+                        {{-- Bobot Kuis --}}
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Bobot Kuis (%) <span class="text-danger">*</span></label>
+                                <input type="number" name="quiz_weight" min="0" max="100"
+                                    class="form-control @error('quiz_weight') is-invalid @enderror"
+                                    value="{{ old('quiz_weight', $editCourse->quiz_weight ?? '40') }}">
+                                @error('quiz_weight')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- Thumbnail --}}
                     <div class="form-group">
                         <label>Thumbnail</label>
@@ -265,6 +293,21 @@ $(document).ready(function () {
     $('#thumbnailInput').on('change', function () {
         const fileName = $(this).val().split('\\').pop();
         $(this).next('.custom-file-label').text(fileName || 'Pilih gambar...');
+    });
+
+    // Auto-calculate bobot
+    $('input[name="assignment_weight"]').on('input', function() {
+        let val = parseInt($(this).val()) || 0;
+        if (val > 100) { val = 100; $(this).val(val); }
+        if (val < 0) { val = 0; $(this).val(val); }
+        $('input[name="quiz_weight"]').val(100 - val);
+    });
+
+    $('input[name="quiz_weight"]').on('input', function() {
+        let val = parseInt($(this).val()) || 0;
+        if (val > 100) { val = 100; $(this).val(val); }
+        if (val < 0) { val = 0; $(this).val(val); }
+        $('input[name="assignment_weight"]').val(100 - val);
     });
 });
 

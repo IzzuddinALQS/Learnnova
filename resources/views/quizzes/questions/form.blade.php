@@ -45,30 +45,29 @@ $editQuestion = $question ?? null;
             </div>
 
             <div class="form-group">
-
                 <label>Tipe Soal</label>
-
-                <select name="type"
-                        class="form-control">
-
-                    <option value="multiple_choice">
-                        Pilihan Ganda
-                    </option>
-
-                    <option value="true_false">
-                        Benar / Salah
-                    </option>
-
-                    <option value="short_answer">
-                        Jawaban Singkat
-                    </option>
-
-                    <option value="essay">
-                        Essay
-                    </option>
-
+                <select name="type" class="form-control">
+                    @php $type = old('type', $editQuestion->type ?? 'multiple_choice'); @endphp
+                    <option value="multiple_choice" {{ $type == 'multiple_choice' ? 'selected' : '' }}>Pilihan Ganda</option>
+                    <option value="true_false" {{ $type == 'true_false' ? 'selected' : '' }}>Benar / Salah</option>
+                    <option value="short_answer" {{ $type == 'short_answer' ? 'selected' : '' }}>Jawaban Singkat</option>
+                    <option value="essay" {{ $type == 'essay' ? 'selected' : '' }}>Essay</option>
                 </select>
+            </div>
 
+            <div class="form-group" id="true_false_answer" style="display: none;">
+                <label>Kunci Jawaban</label>
+                <select name="correct_answer_tf" class="form-control">
+                    @php
+                        $isTrue = old('correct_answer_tf') == '1';
+                        if (!old('correct_answer_tf') && $editQuestion && $editQuestion->type === 'true_false') {
+                            $trueOption = $editQuestion->options()->where('option_text', 'Benar')->first();
+                            $isTrue = $trueOption && $trueOption->is_correct;
+                        }
+                    @endphp
+                    <option value="1" {{ $isTrue ? 'selected' : '' }}>Benar</option>
+                    <option value="0" {{ !$isTrue && $editQuestion && $editQuestion->type === 'true_false' ? 'selected' : '' }}>Salah</option>
+                </select>
             </div>
 
             <div class="form-group">
@@ -116,4 +115,23 @@ $editQuestion = $question ?? null;
 
 </div>
 
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const typeSelect = document.querySelector('select[name="type"]');
+        const tfAnswerGroup = document.getElementById('true_false_answer');
+        
+        function toggleTfAnswer() {
+            if (typeSelect.value === 'true_false') {
+                tfAnswerGroup.style.display = 'block';
+            } else {
+                tfAnswerGroup.style.display = 'none';
+            }
+        }
+        
+        typeSelect.addEventListener('change', toggleTfAnswer);
+        toggleTfAnswer(); // Initial check
+    });
+</script>
+@endpush
 @endsection

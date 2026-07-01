@@ -129,9 +129,9 @@ class GradebookController extends Controller
                     'status' => $submission?->status ?? 'belum',
                 ];
 
+                $totalAssignmentMax += $maxScore;
                 if ($score !== null) {
                     $totalAssignmentScore += $score;
-                    $totalAssignmentMax   += $maxScore;
                 }
             }
 
@@ -159,23 +159,25 @@ class GradebookController extends Controller
                     'is_passed' => $attempt?->is_passed,
                 ];
 
+                $totalQuizMax += $maxScore;
                 if ($score !== null) {
                     $totalQuizScore += $score;
-                    $totalQuizMax   += $maxScore;
                 }
             }
 
             $avgQuiz = $totalQuizMax > 0
                 ? round(($totalQuizScore / $totalQuizMax) * 100, 2)
-                : null;
+                : (count($course->quizzes) > 0 ? 0 : null);
+
+            $avgAssignment = $totalAssignmentMax > 0
+                ? round(($totalAssignmentScore / $totalAssignmentMax) * 100, 2)
+                : (count($course->assignments) > 0 ? 0 : null);
 
             $finalScore = null;
-            if ($avgAssignment !== null && $avgQuiz !== null) {
-                $finalScore = round(($avgAssignment * $assignmentWeight) + ($avgQuiz * $quizWeight), 2);
-            } elseif ($avgAssignment !== null) {
-                $finalScore = $avgAssignment;
-            } elseif ($avgQuiz !== null) {
-                $finalScore = $avgQuiz;
+            if ($avgAssignment !== null || $avgQuiz !== null) {
+                $valAssignment = $avgAssignment ?? 0;
+                $valQuiz = $avgQuiz ?? 0;
+                $finalScore = round(($valAssignment * $assignmentWeight) + ($valQuiz * $quizWeight), 2);
             }
 
             $gradebook[] = [
@@ -194,7 +196,7 @@ class GradebookController extends Controller
     }
 
     // ── Helper: Bangun data gradebook per course ──────────────────────
-    private function buildCourseGradebook(Course $course, $students): array
+    public function buildCourseGradebook(Course $course, $students): array
     {
         $course->load(['assignments', 'quizzes.questions']);
         $assignmentWeight = $course->assignment_weight / 100;
@@ -214,9 +216,9 @@ class GradebookController extends Controller
                 $score              = $submission?->score;
                 $assignmentScores[] = $score;
 
+                $totalAssignmentMax += $assignment->max_score;
                 if ($score !== null) {
                     $totalAssignmentScore += $score;
-                    $totalAssignmentMax   += $assignment->max_score;
                 }
             }
 
@@ -238,23 +240,25 @@ class GradebookController extends Controller
                 $score        = $attempt?->score;
                 $quizScores[] = $score;
 
+                $totalQuizMax += $maxScore;
                 if ($score !== null) {
                     $totalQuizScore += $score;
-                    $totalQuizMax   += $maxScore;
                 }
             }
 
             $avgQuiz = $totalQuizMax > 0
                 ? round(($totalQuizScore / $totalQuizMax) * 100, 2)
-                : null;
+                : (count($course->quizzes) > 0 ? 0 : null);
+
+            $avgAssignment = $totalAssignmentMax > 0
+                ? round(($totalAssignmentScore / $totalAssignmentMax) * 100, 2)
+                : (count($course->assignments) > 0 ? 0 : null);
 
             $finalScore = null;
-            if ($avgAssignment !== null && $avgQuiz !== null) {
-                $finalScore = round(($avgAssignment * $assignmentWeight) + ($avgQuiz * $quizWeight), 2);
-            } elseif ($avgAssignment !== null) {
-                $finalScore = $avgAssignment;
-            } elseif ($avgQuiz !== null) {
-                $finalScore = $avgQuiz;
+            if ($avgAssignment !== null || $avgQuiz !== null) {
+                $valAssignment = $avgAssignment ?? 0;
+                $valQuiz = $avgQuiz ?? 0;
+                $finalScore = round(($valAssignment * $assignmentWeight) + ($valQuiz * $quizWeight), 2);
             }
 
             $gradebook[] = [
