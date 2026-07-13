@@ -4,6 +4,22 @@
 
 @section('content')
 
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0" style="font-size:1.3rem">Daftar Quiz</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Quiz</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="card-header">
 
     <h3 class="card-title">
@@ -134,7 +150,7 @@
                             </a>
                         @endif
 
-                        @if(auth()->user()->hasPermission('quizzes.grade'))
+                        @if(auth()->user()->hasrole('pengajar'))
                             <a href="{{ route('quizzes.attempts.index', $quiz->id) }}"
                                class="btn btn-primary btn-sm">
                                 <i class="fas fa-clipboard-list"></i>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Quiz;
 use App\Models\QuizQuestion;
+use App\Models\QuizOption;
 use Illuminate\Http\Request;
 
 class QuizQuestionController extends Controller
@@ -43,7 +44,21 @@ class QuizQuestionController extends Controller
 
         $validated['quiz_id'] = $quiz->id;
 
-        QuizQuestion::create($validated);
+        $question = QuizQuestion::create($validated);
+
+        if ($question->type === 'true_false') {
+            $correctAnswer = $request->input('correct_answer_tf');
+            QuizOption::create([
+                'question_id' => $question->id,
+                'option_text' => 'Benar',
+                'is_correct' => $correctAnswer === '1'
+            ]);
+            QuizOption::create([
+                'question_id' => $question->id,
+                'option_text' => 'Salah',
+                'is_correct' => $correctAnswer === '0'
+            ]);
+        }
 
         return redirect()
             ->route('quizzes.questions.index', $quiz->id)
@@ -74,6 +89,21 @@ class QuizQuestionController extends Controller
         ]);
 
         $question->update($validated);
+
+        if ($question->type === 'true_false') {
+            $question->options()->delete();
+            $correctAnswer = $request->input('correct_answer_tf');
+            QuizOption::create([
+                'question_id' => $question->id,
+                'option_text' => 'Benar',
+                'is_correct' => $correctAnswer === '1'
+            ]);
+            QuizOption::create([
+                'question_id' => $question->id,
+                'option_text' => 'Salah',
+                'is_correct' => $correctAnswer === '0'
+            ]);
+        }
 
         return redirect()
             ->route('quizzes.questions.index', $quiz)

@@ -12,7 +12,8 @@
                 <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Rekap Nilai</li>
+                        <li class="breadcrumb-item"><a href="{{ route('gradebook.courses') }}">Rekap Nilai</a></li>
+                        <li class="breadcrumb-item active">{{ $course->title }}</li>
                     </ol>
                 </div>
             </div>
@@ -138,7 +139,7 @@
                 </div>
             </div>
 
-            <a href="{{ route('dashboard') }}" class="btn btn-secondary mt-3">
+            <a href="{{ route('gradebook.courses') }}" class="btn btn-secondary mt-3">
                 <i class="fas fa-arrow-left mr-1"></i> Kembali
             </a>
 

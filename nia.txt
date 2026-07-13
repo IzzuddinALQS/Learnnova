@@ -1,0 +1,4 @@
+Nama: Nia Astuti
+NIM: 0112523027
+
+Ini adalah Praktik Git Flow untuk menyelesaikan tugas individu di Aktivitas 2

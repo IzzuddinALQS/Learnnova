@@ -95,7 +95,7 @@ class AcademicReportSummarySheet implements FromCollection, WithHeadings, WithTi
                 $totalQuizScore = 0;
                 $totalQuizMax   = 0;
                 foreach ($course->quizzes as $quiz) {
-                    $attempt  = QuizAttempt::where('quiz_id', $quiz->id)->where('student_id', $student->id)->latest()->first();
+                    $attempt = QuizAttempt::where('quiz_id', $quiz->id)->where('student_id', $student->id)->orderBy('score', 'desc')->first();
                     $maxScore = $quiz->questions->sum('points');
                     if ($attempt?->score !== null) {
                         $totalQuizScore += $attempt->score;
@@ -215,7 +215,7 @@ class AcademicReportCourseSheet implements FromCollection, WithHeadings, WithTit
             $totalQuizScore = 0;
             $totalQuizMax   = 0;
             foreach ($this->course->quizzes as $quiz) {
-                $attempt  = QuizAttempt::where('quiz_id', $quiz->id)->where('student_id', $student->id)->latest()->first();
+                $attempt = QuizAttempt::where('quiz_id', $quiz->id)->where('student_id', $student->id)->orderBy('score', 'desc')->first();
                 $maxScore = $quiz->questions->sum('points');
                 $score    = $attempt?->score;
                 $row[]    = $score ?? '-';

@@ -1,15 +1,23 @@
 @extends('main')
 
-@php use Illuminate\Support\Str; @endphp
-
-@section('title', 'Dashboard')
+@section('title', auth()->user()->hasRole('super_admin') ? 'Dashboard Super Admin' : (auth()->user()->hasRole('akademik') ? 'Dashboard Staf Akademik' : (auth()->user()->hasRole('pengajar') ? 'Dashboard Pengajar' : 'Dashboard Pelajar')))
 
 @section('content')
 <div class="content-header">
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1 class="m-0 font-weight-bold">Dashboard</h1>
+                <h1 class="m-0 font-weight-bold">
+                    @if(auth()->user()->hasRole('super_admin'))
+                        Dashboard Super Admin
+                    @elseif(auth()->user()->hasRole('akademik'))
+                        Dashboard Staf Akademik
+                    @elseif(auth()->user()->hasRole('pengajar'))
+                        Dashboard Pengajar
+                    @else
+                        Dashboard Pelajar
+                    @endif
+                </h1>
             </div>
         </div>
     </div>
@@ -18,179 +26,291 @@
 <section class="content">
     <div class="container-fluid">
         
-        {{-- 1. BAGIAN SAMBUTAN & MOTIVASI (VERSI GENERAL) --}}
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="card shadow-lg border-0" style="border-radius: 20px; background: linear-gradient(135deg, #4f46e5 0%, #a78bfa 100%); color: white;">
-                    <div class="card-body p-4">
-                        <div class="row align-items-center">
-                            <div class="col-md-8">
-                                <h2 class="font-weight-bold">Halo, {{ explode(' ', Auth::user()->name)[0] }}! 👋</h2>
-                                <p class="mb-4" style="font-size: 1.1rem; opacity: 0.9; line-height: 1.6;">
-                                    "Setiap langkah kecil yang kamu ambil hari ini adalah investasi besar untuk masa depanmu." <br>
-                                    Ayo selesaikan modulmu hari ini dan pertahankan performa belajarmu!
-                                </p>
-                                <div class="d-flex" style="gap: 15px;">
-                                    <button class="btn btn-light rounded-pill px-4 text-primary font-weight-bold shadow-sm">Lanjut Belajar</button>
-                                    <button class="btn btn-outline-light rounded-pill px-4 text-white">Lihat Progress</button>
+        {{-- ========================================================== --}}
+        {{-- 1. BLOK SUPER ADMIN --}}
+        {{-- ========================================================== --}}
+        @if(auth()->user()->hasRole('super_admin'))
+            <div class="row">
+                {{-- Box Total Users --}}
+                <div class="col-lg-4 col-6">
+                    <div class="small-box bg-info shadow-sm" style="border-radius: 15px;">
+                        <div class="inner p-3">
+                            <h3>{{ $stats['total_users'] ?? 0 }}</h3>
+                            <p>Total Pengguna Sistem</p>
+                        </div>
+                        <div class="icon"><i class="fas fa-users"></i></div>
+                        <a href="{{ route('users.index') }}" class="small-box-footer rounded-bottom" style="border-bottom-left-radius: 15px !important; border-bottom-right-radius: 15px !important;">
+                            Manajemen User <i class="fas fa-arrow-circle-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                {{-- Box Total Kelas Sistem --}}
+                <div class="col-lg-4 col-6">
+                    <div class="small-box bg-success shadow-sm" style="border-radius: 15px;">
+                        <div class="inner p-3">
+                            <h3>{{ $stats['total_courses'] ?? 0 }}</h3>
+                            <p>Total Seluruh Kelas</p>
+                        </div>
+                        <div class="icon"><i class="fas fa-chalkboard"></i></div>
+                        <a href="{{ route('courses.index') }}" class="small-box-footer" style="border-bottom-left-radius: 15px !important; border-bottom-right-radius: 15px !important;">
+                            Kelola Kelas Master <i class="fas fa-arrow-circle-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                {{-- Box Konfigurasi Hak Akses --}}
+                <div class="col-lg-4 col-12">
+                    <div class="small-box bg-secondary shadow-sm" style="border-radius: 15px;">
+                        <div class="inner p-3">
+                            <h3>Roles</h3>
+                            <p>Hak Akses & Log Sistem</p>
+                        </div>
+                        <div class="icon"><i class="fas fa-shield-alt"></i></div>
+                        <a href="{{ route('roles.index') }}" class="small-box-footer" style="border-bottom-left-radius: 15px !important; border-bottom-right-radius: 15px !important;">
+                            Pengaturan Hak Akses <i class="fas fa-arrow-circle-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <div class="card shadow-sm border-0 p-4 text-center" style="border-radius: 15px; background: #f8fafc;">
+                        <h4 class="font-weight-bold text-primary">Selamat Datang di Panel Akses Super Admin 🔐</h4>
+                        <p class="text-muted mb-0">Anda memiliki otoritas penuh terhadap menu Administrasi, Manajemen Akun Pengguna, Roles & Permissions, serta rekaman Activity Log.</p>
+                    </div>
+                </div>
+            </div>
+
+        {{-- ========================================================== --}}
+        {{-- 2. BLOK STAF AKADEMIK --}}
+        {{-- ========================================================== --}}
+        @elseif(auth()->user()->hasRole('akademik'))
+            <div class="row">
+                <div class="col-lg-4 col-12 mb-3">
+                    <div class="small-box bg-success shadow-sm" style="border-radius: 15px;">
+                        <div class="inner p-3">
+                            <h3>{{ $stats['total_courses'] ?? 0 }}</h3>
+                            <p>Total Kelas Aktif</p>
+                        </div>
+                        <div class="icon"><i class="fas fa-chalkboard-teacher"></i></div>
+                        <a href="{{ route('courses.index') }}" class="small-box-footer" style="border-bottom-left-radius: 15px !important; border-bottom-right-radius: 15px !important;">
+                            Kelola Master Kelas <i class="fas fa-arrow-circle-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-6 mb-3">
+                    <div class="small-box bg-warning shadow-sm" style="border-radius: 15px;">
+                        <div class="inner p-3 text-white">
+                            <h3>{{ $stats['total_syllabus'] ?? 0 }}</h3>
+                            <p>Dokumen Silabus</p>
+                        </div>
+                        <div class="icon"><i class="fas fa-book-open"></i></div>
+                        <a href="{{ route('syllabus.index') }}" class="small-box-footer text-white" style="border-bottom-left-radius: 15px !important; border-bottom-right-radius: 15px !important;">
+                            Kelola Master Silabus <i class="fas fa-arrow-circle-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-6 mb-3">
+                    <div class="small-box bg-purple shadow-sm" style="border-radius: 15px; background-color: #6f42c1 !important; color: white;">
+                        <div class="inner p-3">
+                            <h3>Peserta</h3>
+                            <p>Manajemen Peserta Kelas</p>
+                        </div>
+                        <div class="icon" style="color: rgba(255,255,255,0.15);"><i class="fas fa-user-graduate"></i></div>
+                        <a href="{{ route('students.overview') }}" class="small-box-footer text-white" style="border-bottom-left-radius: 15px !important; border-bottom-right-radius: 15px !important;">
+                            Lihat Daftar Pelajar <i class="fas fa-arrow-circle-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        {{-- ========================================================== --}}
+        {{-- 3. BLOK PENGAJAR --}}
+        {{-- ========================================================== --}}
+        @elseif(auth()->user()->hasRole('pengajar'))
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card shadow-sm border-0 p-4" style="border-radius: 15px; background: #f0fdf4; border-left: 5px solid #16a34a !important;">
+                        <h4 class="font-weight-bold text-success">Ruang Kerja Pendidik 👨‍🏫</h4>
+                        <p class="text-muted mb-0">Selamat datang kembali. Melalui panel ini Anda dapat mengunggah materi, membuat quiz, dan memeriksa tugas masuk.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-2">
+                <div class="col-md-4 col-12">
+                    <div class="info-box shadow-sm border-0" style="border-radius: 10px;">
+                        <span class="info-box-icon bg-success"><i class="fas fa-graduation-cap"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Kelas Anda Ampu</span>
+                            <span class="info-box-number">{{ isset($taughtCourses) ? count($taughtCourses) : 0 }} Kelas</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-6">
+                    <div class="info-box shadow-sm border-0" style="border-radius: 10px;">
+                        <span class="info-box-icon bg-info"><i class="fas fa-file-alt"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Total Materi</span>
+                            <span class="info-box-number">{{ $stats['teacher_materials_count'] ?? 0 }} File</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-6">
+                    <div class="info-box shadow-sm border-0" style="border-radius: 10px;">
+                        <span class="info-box-icon bg-danger"><i class="fas fa-clock"></i></span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Perlu Diperiksa</span>
+                            <span class="info-box-number">{{ $stats['pending_grading_count'] ?? 0 }} Tugas</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="font-weight-bold text-dark mt-4 mb-3">Daftar Kelas yang Anda Ampu</h5>
+            <div class="row">
+                @if(isset($taughtCourses) && count($taughtCourses) > 0)
+                    @foreach($taughtCourses as $course)
+                        <div class="col-md-4 mb-4">
+                            <div class="card shadow-sm border-0 h-100" style="border-radius: 15px;">
+                                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                                    <div>
+                                        <div class="text-success mb-2"><i class="fas fa-chalkboard fa-2x"></i></div>
+                                        <h5 class="font-weight-bold text-dark mb-1">{{ $course->title }}</h5>
+                                        <p class="text-muted small">{{ Str::limit($course->description, 80, '...') }}</p>
+                                    </div>
+                                    <div>
+                                        <hr>
+                                        <div class="d-flex justify-content-between">
+                                            <a href="{{ route('courses.materials.index', ['courseId' => $course->id]) }}" class="btn btn-xs btn-outline-primary rounded-pill px-3">Kelola Materi</a>
+                                            <a href="{{ route('assignments.index') }}" class="btn btn-xs btn-outline-danger rounded-pill px-3">Kelola Tugas</a>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-4 text-center border-left d-none d-md-block" style="border-color: rgba(255,255,255,0.2) !important;">
-                                <small class="text-uppercase" style="opacity: 0.8; letter-spacing: 1px;">Progres Mingguan</small>
-                                <h1 class="display-3 font-weight-bold mt-2">84%</h1>
-                                <div class="progress rounded-pill mx-auto" style="height: 10px; width: 80%; background: rgba(255,255,255,0.2);">
-                                    <div class="progress-bar bg-white rounded-pill" style="width: 84%"></div>
+                        </div>
+                    @endforeach
+                @else
+                    <div class="col-12">
+                        <div class="card p-4 text-center text-muted shadow-sm" style="border-radius: 15px;">Belum ada kelas yang diampu.</div>
+                    </div>
+                @endif
+            </div>
+
+        {{-- ========================================================== --}}
+        {{-- 4. BLOK PELAJAR --}}
+        {{-- ========================================================== --}}
+        @else
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card shadow-lg border-0" style="border-radius: 20px; background: linear-gradient(135deg, #4f46e5 0%, #a78bfa 100%); color: white;">
+                        <div class="card-body p-4">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h2 class="font-weight-bold">Halo, Pelajar! 👋</h2>
+                                    <p class="mb-4" style="font-size: 1.1rem; opacity: 0.9;">Jadikan setiap hari sebagai kesempatan untuk tumbuh.</p>
+                                    <a href="{{ route('courses.index') }}" class="btn btn-light rounded-pill px-5 text-primary font-weight-bold shadow-sm">Mulai Belajar</a>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        {{-- 3. KONTEN UTAMA: MATA PELAJARAN --}}
-        <div class="row">
-            <div class="col-md-8">
-                {{-- 2. PENGUMUMAN UNTUK PELAJAR --}}
-                @if(Auth::user()->hasRole('pelajar'))
-                    <div class="card shadow-sm border-0 mb-4" style="border-radius: 15px; overflow: hidden;">
-                        <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center w-100">
-                            <div>
-                                <h5 class="font-weight-bold mb-0">Pengumuman Terbaru</h5>
-                                <small class="text-muted">Pengumuman terbaru untuk kamu ikuti.</small>
-                            </div>
-                            <a href="{{ route('announcements.index') }}" class="btn btn-sm btn-outline-primary ml-auto">Lihat Semua</a>
+            {{-- PENGUMUMAN TERBARU --}}
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card shadow-sm border-0" style="border-radius: 15px;">
+                        <div class="card-header bg-transparent border-0 pt-3 pb-0">
+                            <h5 class="font-weight-bold text-dark mb-0 d-inline-block">Pengumuman Terbaru</h5>
+                            <a href="{{ route('announcements.index') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 float-right">Lihat Semua</a>
                         </div>
-                        <div class="card-body px-4 pb-4 pt-0">
-                            @forelse($announcements as $announcement)
-                                <div class="d-flex align-items-start border-bottom py-2 {{ $loop->last ? 'border-0 pb-0' : '' }}">
-                                    <div class="flex-grow-1">
-                                        <div class="d-flex justify-content-between align-items-center mb-1">
-                                            <div>
-                                                <span class="badge badge-light border mr-2 text-dark" style="font-size: 0.7rem;">
-                                                    {{ $announcement->course->title ?? 'Pengumuman Umum' }}
-                                                </span>
-                                                <span class="font-weight-bold" style="font-size: 0.9rem;">{{ $announcement->title }}</span>
-                                            </div>
-                                            <small class="text-muted" style="font-size: 0.75rem;">{{ $announcement->published_at->format('d M Y') }}</small>
+                        <div class="card-body">
+                            @if(isset($latestAnnouncements) && count($latestAnnouncements) > 0)
+                                @foreach($latestAnnouncements as $announcement)
+                                    <div class="d-flex align-items-center border-bottom pb-2 mb-2">
+                                        <div class="mr-3 text-primary"><i class="fas fa-bullhorn"></i></div>
+                                        <div>
+                                            <h6 class="font-weight-bold mb-0">{{ $announcement->title }}</h6>
+                                            <small class="text-muted">{{ $announcement->created_at->diffForHumans() }}</small>
                                         </div>
-                                        <div class="d-flex justify-content-between align-items-center mt-1">
-                                            <p class="text-muted mb-0" style="font-size: 0.8rem; line-height: 1.3;">{{ Str::limit($announcement->content, 120) }}</p>
-                                            <a href="{{ route('announcements.show', $announcement) }}" class="btn btn-sm btn-light text-primary rounded-circle flex-shrink-0" style="width: 28px; height: 28px; padding: 0; line-height: 28px; text-align: center; margin-left: 10px;">
-                                                <i class="fas fa-chevron-right" style="font-size: 0.8rem;"></i>
-                                            </a>
+                                    </div>
+                                @endforeach
+                            @else
+                                <div class="bg-info p-3 text-white" style="border-radius: 10px;">
+                                    Belum ada pengumuman terbaru untuk saat ini.
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8" id="kursus-aktif">
+                    <h5 class="mb-3 font-weight-bold text-dark">Kelas yang Anda Ikuti</h5>
+                    <div class="row">
+                        @if(isset($activeCourses))
+                            @forelse($activeCourses as $course)
+                                <div class="col-md-6 mb-4">
+                                    <div class="card shadow-sm border-0 h-100" style="border-radius: 15px;">
+                                        <div class="card-body p-4 d-flex flex-column justify-content-between">
+                                            <div>
+                                                <h5 class="font-weight-bold text-primary mb-1">{{ $course->title }}</h5>
+                                                <p class="text-muted small">{{ Str::limit($course->description, 80, '...') }}</p>
+                                            </div>
+                                            <div>
+                                                <hr>
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <a href="{{ route('courses.show', ['course' => $course->id]) }}" class="btn btn-sm btn-primary rounded-pill px-3">Masuk Kelas</a>
+                                                    <small class="text-muted"><i class="fas fa-book mr-1"></i> Lihat Materi</small>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             @empty
-                                <div class="alert alert-info mb-0 mt-3">
-                                    Belum ada pengumuman terbaru untuk saat ini.
+                                <div class="col-12">
+                                    <div class="card p-4 text-center text-muted shadow-sm" style="border-radius: 15px;">Belum ada kelas yang diikuti.</div>
                                 </div>
                             @endforelse
-                        </div>
-                    </div>
-                @endif
-                <h5 class="mb-3 font-weight-bold">Kursus Aktif</h5>
-                <div class="row">
-                    @if(Auth::user()->hasRole('pengajar'))
-                        <div class="col-md-4 mb-4">
-                            <div class="card shadow-sm border-0 h-100" style="border-radius: 15px;">
-                                <div class="card-body">
-                                    <h6 class="text-uppercase text-muted">Kelas Terbit</h6>
-                                    <h3 class="font-weight-bold">{{ $pengajarStats['published_courses'] }}</h3>
-                                    <p class="mb-0 text-muted">Kelas aktif yang kamu ajar</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-4">
-                            <div class="card shadow-sm border-0 h-100" style="border-radius: 15px;">
-                                <div class="card-body">
-                                    <h6 class="text-uppercase text-muted">Siswa Aktif</h6>
-                                    <h3 class="font-weight-bold">{{ $pengajarStats['active_students'] }}</h3>
-                                    <p class="mb-0 text-muted">Siswa terdaftar di kelas kamu</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-4">
-                            <div class="card shadow-sm border-0 h-100" style="border-radius: 15px;">
-                                <div class="card-body">
-                                    <h6 class="text-uppercase text-muted">Total Enroll</h6>
-                                    <h3 class="font-weight-bold">{{ $pengajarStats['active_enrollments'] }}</h3>
-                                    <p class="mb-0 text-muted">Pendaftaran siswa di semua kelas kamu</p>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
-
-                        @if(Auth::user()->hasRole('pelajar') || Auth::user()->hasRole('pengajar'))
-                        @if(isset($courses) && $courses->isNotEmpty())
-                            @foreach($courses as $course)
-                                <div class="col-md-6 mb-4">
-                                    <div class="card shadow-sm border-0 h-100" style="border-radius: 15px;">
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between">
-                                                <span class="badge badge-pill px-3 mb-2" style="background: #e9eefb; color: #1f2937;">
-                                                    {{ $course->instructor->name ?? 'Instruktur' }}
-                                                </span>
-                                                <i class="fas fa-chalkboard text-muted"></i>
-                                            </div>
-                                            <h5 class="font-weight-bold mt-2">{{ $course->title }}</h5>
-                                            <p class="text-muted small">{{ Str::limit($course->description ?? '', 120) }}</p>
-                                            <hr>
-                                            <a href="{{ route('courses.show', $course) }}" class="btn btn-sm btn-primary">Buka Kelas</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        @else
-                            <div class="col-12">
-                                <div class="alert alert-info mb-0">
-                                    Belum ada kursus aktif yang sesuai.
-                                </div>
-                            </div>
                         @endif
-                    @else
-                        <div class="col-12">
-                            <p class="text-muted">Konten kursus akan tampil di sini.</p>
-                        </div>
-                    @endif
-                </div>
-            </div>
-
-            {{-- SIDEBAR --}}
-            <div class="col-md-4">
-                {{-- Tugas --}}
-                <div class="card shadow-sm border-0 mb-4" style="border-radius: 15px;">
-                    <div class="card-header bg-transparent border-0 pt-4 px-4">
-                        <h5 class="font-weight-bold mb-0">Tugas Terdekat</h5>
-                    </div>
-                    <div class="card-body px-4">
-                        <div class="d-flex align-items-center mb-3 border-bottom pb-3">
-                            <div class="mr-3 text-info"><i class="fas fa-edit fa-lg"></i></div>
-                            <div>
-                                <h6 class="font-weight-bold mb-0">Latihan Essay Inggris</h6>
-                                <small class="text-muted">Batas waktu: Hari ini</small>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <div class="mr-3 text-secondary"><i class="fas fa-tasks fa-lg"></i></div>
-                            <div>
-                                <h6 class="font-weight-bold mb-0">Kuis Aljabar</h6>
-                                <small class="text-muted">Batas waktu: 2 hari lagi</small>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
-                {{-- Streak --}}
-                <div class="card border-0 shadow-sm text-center p-4" style="border-radius: 15px; background: #fffbeb;">
-                    <i class="fas fa-fire fa-3x text-warning mb-2"></i>
-                    <h5 class="font-weight-bold mb-1">12 Hari Berturut-turut!</h5>
-                    <p class="small text-muted mb-0">Disiplin adalah kunci sukses. Keren banget progresnya!</p>
+                {{-- TUGAS TERDEKAT PELAJAR --}}
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 mb-4" style="border-radius: 15px;">
+                        <div class="card-header bg-transparent border-0 pt-4 px-4">
+                            <h5 class="font-weight-bold mb-0 text-danger"><i class="fas fa-exclamation-circle mr-1"></i> Tugas Terdekat</h5>
+                        </div>
+                        <div class="card-body px-4 pt-2">
+                            @if(isset($upcomingAssignments))
+                                @forelse($upcomingAssignments as $assignment)
+                                    <a href="{{ route('assignments.show', ['assignment' => $assignment->id]) }}" class="text-decoration-none text-dark">
+                                        <div class="d-flex align-items-center mb-3 border-bottom pb-3">
+                                            <div class="mr-3 text-danger"><i class="fas fa-edit fa-lg"></i></div>
+                                            <div>
+                                                <h6 class="font-weight-bold mb-0 text-dark">{{ $assignment->title ?? $assignment->name }}</h6>
+                                                <small class="text-danger font-weight-bold">Batas: {{ $assignment->due_date }}</small>
+                                            </div>
+                                        </div>
+                                    </a>
+                                @empty
+                                    <div class="text-center py-4 text-muted">
+                                        <p class="small mb-0">Hore! Tidak ada tugas terdekat yang perlu dikerjakan.</p>
+                                    </div>
+                                @endforelse
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-
+        @endif
     </div>
 </section>
 @endsection

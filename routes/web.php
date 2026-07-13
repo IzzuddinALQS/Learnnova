@@ -22,8 +22,11 @@ use App\Http\Controllers\QuizAttemptController;
 use App\Http\Controllers\QuizQuestionController;
 use App\Http\Controllers\QuizOptionController;
 use App\Http\Controllers\GradebookController;
+use App\Http\Controllers\PimpinanDashboardController;
+use App\Http\Controllers\AttendanceController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 // Auth
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -37,6 +40,7 @@ Route::post('/register', [RegisterController::class, 'register']);
 // Protected routes
 Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard-pimpinan',[PimpinanDashboardController::class,'index'])->name('dashboard.pimpinan');
 
     // Profile
     Route::get('/profile', [UserController::class, 'profile'])->name('profile');
@@ -91,12 +95,23 @@ Route::middleware('auth')->group(function () {
     Route::post('/web-push/subscribe', [App\Http\Controllers\PushSubscriptionController::class, 'subscribe'])->name('webpush.subscribe');
     Route::post('/web-push/unsubscribe', [App\Http\Controllers\PushSubscriptionController::class, 'unsubscribe'])->name('webpush.unsubscribe');
 
-    Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
+    Route::resource('schedules', ScheduleController::class);
+
+    // Attendance
+    Route::get('/attendance/{scheduleId}', [AttendanceController::class, 'show'])->name('attendance.show');
+    Route::post('/attendance/store', [AttendanceController::class, 'store'])->name('attendance.store');
+    Route::get('/attendance/report/{scheduleId}', [AttendanceController::class, 'report'])->name('attendance.report');
+    Route::get('/attendance/my-history/{scheduleId}', [AttendanceController::class, 'studentHistory'])
+    ->name('attendance.student');
+
+    Route::get('/attendance/report/{scheduleId}/export-csv', [AttendanceController::class, 'exportCsv'])
+        ->name('attendance.export.csv');
 
     // Gradebook
     Route::get('/gradebook', [GradebookController::class, 'index'])->name('gradebook.index');
     Route::get('/gradebook/export/pdf', [GradebookController::class, 'exportPdfStudent'])->name('gradebook.export.pdf');
     Route::get('/gradebook/export/excel', [GradebookController::class, 'exportExcelStudent'])->name('gradebook.export.excel');
+    Route::get('/gradebook/courses', [GradebookController::class, 'courses'])->name('gradebook.courses');
     Route::get('/gradebook/{course}', [GradebookController::class, 'course'])->name('gradebook.course');
     Route::get('/gradebook/{course}/export/pdf', [GradebookController::class, 'exportPdfCourse'])->name('gradebook.export.pdf.course');
     Route::get('/gradebook/{course}/export/excel', [GradebookController::class, 'exportExcelCourse'])->name('gradebook.export.excel.course');
@@ -187,4 +202,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/materials/{material}/progress', [MaterialController::class, 'progress'])->name('materials.progress');
         Route::post('/materials/{material}/bookmark', [MaterialController::class, 'bookmark'])->name('materials.bookmark');
     });
+
+     
 });

@@ -1,5 +1,4 @@
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
-    <!-- Brand Logo -->
     <a href="{{ route('dashboard') }}" class="brand-link">
         <img src="{{ asset('dist/img/AdminLTELogo.png') }}" alt="E-Learning Logo"
             class="brand-image img-circle elevation-3" style="opacity: .8">
@@ -7,7 +6,6 @@
     </a>
 
     <div class="sidebar">
-        <!-- User Panel -->
         <div class="user-panel mt-3 pb-3 mb-3 d-flex">
             <div class="image">
                 <img src="{{ auth()->user()->avatar ? asset('storage/' . auth()->user()->avatar) : asset('dist/img/user2-160x160.jpg') }}"
@@ -15,7 +13,7 @@
                     style="width: 33.6px; height: 33.6px; object-fit: cover;">
             </div>
             <div class="info">
-                <a href="#" class="d-block">{{ auth()->user()->name ?? 'Guest' }}</a>
+                <a href="{{ url('/profile') }}" class="d-block">{{ auth()->user()->name ?? 'Guest' }}</a>
                 @auth
                     <small style="color:#adb5bd">
                         {{ auth()->user()->roles->first()->name ?? '' }}
@@ -24,7 +22,6 @@
             </div>
         </div>
 
-        <!-- Sidebar Search -->
         <div class="form-inline">
             <div class="input-group" data-widget="sidebar-search">
                 <input class="form-control form-control-sidebar" type="search" placeholder="Cari menu..."
@@ -151,29 +148,16 @@
                     @endif
 
                     {{-- Rekap Nilai (Pengajar & Super Admin) --}}
-                    @if(Auth::user()->hasPermission('reports.view') && !Auth::user()->hasRole('pelajar'))
-                        <li class="nav-item {{ request()->routeIs('gradebook.*') ? 'menu-open' : '' }}">
-                            <a href="#"
-                                class="nav-link {{ request()->routeIs('gradebook.*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-chart-bar"></i>
-                                <p>
-                                    Rekap Nilai
-                                    <i class="right fas fa-angle-left"></i>
-                                </p>
-                            </a>
-                            <ul class="nav nav-treeview">
-                                @foreach(Auth::user()->hasRole('super_admin') ? \App\Models\Course::all() : \App\Models\Course::where('instructor_id', Auth::id())->orWhereHas('instructors', fn($q) => $q->where('user_id', Auth::id()))->get() as $course)
-                                    <li class="nav-item">
-                                        <a href="{{ route('gradebook.course', $course->id) }}"
-                                            class="nav-link {{ request()->routeIs('gradebook.course') && request()->route('course')?->id == $course->id ? 'active' : '' }}">
-                                            <i class="far fa-circle nav-icon"></i>
-                                            <p>{{ Str::limit($course->title, 20) }}</p>
-                                        </a>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </li>
-                    @endif
+                    {{-- Rekap Nilai (Pengajar & Super Admin) --}}
+@if(Auth::user()->hasPermission('reports.view') && !Auth::user()->hasRole('pelajar'))
+    <li class="nav-item">
+        <a href="{{ route('gradebook.courses') }}"
+            class="nav-link {{ request()->routeIs('gradebook.courses') || request()->routeIs('gradebook.course') ? 'active' : '' }}">
+            <i class="nav-icon fas fa-chart-bar"></i>
+            <p>Rekap Nilai</p>
+        </a>
+    </li>
+@endif
 
                     @if (auth()->user()->hasPermission('assignments.view'))
                         <li class="nav-item">
@@ -197,9 +181,10 @@
 
                     @if (auth()->user()->hasPermission('schedules.view'))
                         <li class="nav-item">
-                            <a href="{{ url('/schedules') }}"
-                                class="nav-link {{ request()->is('schedules*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-calendar-alt"></i>
+                            {{-- Jika Pengajar, arahkan ke daftar jadwal untuk memilih kelas yang ingin diabsen --}}
+                            <a href="{{ route('schedules.index') }}"
+                                class="nav-link {{ request()->is('schedules*') || request()->is('attendance*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-calendar-check"></i>
                                 <p>Jadwal & Absensi</p>
                             </a>
                         </li>

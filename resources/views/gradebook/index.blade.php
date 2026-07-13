@@ -22,13 +22,38 @@
     <section class="content">
         <div class="container-fluid">
 
-            {{-- Tombol Export --}}
+            {{-- Filter & Export --}}
             <div class="row mb-3">
-                <div class="col-12 d-flex justify-content-end" style="gap: 8px;">
-                    <a href="{{ route('gradebook.export.excel') }}" class="btn btn-success btn-sm">
+                <div class="col-md-6">
+                    <form method="GET" action="{{ route('gradebook.index') }}" id="filterForm">
+                        <div class="input-group">
+                            <select name="course_id" class="form-control"
+                                onchange="document.getElementById('filterForm').submit()">
+                                <option value="">-- Semua Kelas --</option>
+                                @foreach($allCourses as $course)
+                                    <option value="{{ $course->id }}"
+                                        {{ $selectedCourse == $course->id ? 'selected' : '' }}>
+                                        {{ $course->title }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @if($selectedCourse)
+                                <div class="input-group-append">
+                                    <a href="{{ route('gradebook.index') }}" class="btn btn-secondary">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                </div>
+                            @endif
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-6 d-flex justify-content-end" style="gap: 8px;">
+                    <a href="{{ route('gradebook.export.excel') . ($selectedCourse ? '?course_id=' . $selectedCourse : '') }}"
+                        class="btn btn-success btn-sm">
                         <i class="fas fa-file-excel mr-1"></i> Export Excel
                     </a>
-                    <a href="{{ route('gradebook.export.pdf') }}" class="btn btn-danger btn-sm">
+                    <a href="{{ route('gradebook.export.pdf') . ($selectedCourse ? '?course_id=' . $selectedCourse : '') }}"
+                        class="btn btn-danger btn-sm">
                         <i class="fas fa-file-pdf mr-1"></i> Export PDF
                     </a>
                 </div>
@@ -48,7 +73,6 @@
                         </div>
                     </div>
                     <div class="card-body">
-
                         <div class="row">
 
                             {{-- Tabel Tugas --}}
@@ -200,7 +224,11 @@
                 </div>
             @empty
                 <div class="alert alert-info">
-                    Anda belum terdaftar di kelas manapun.
+                    @if($selectedCourse)
+                        Belum ada nilai untuk kelas ini.
+                    @else
+                        Anda belum terdaftar di kelas manapun.
+                    @endif
                 </div>
             @endforelse
 

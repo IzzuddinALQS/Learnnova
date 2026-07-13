@@ -14,6 +14,7 @@ return new class extends Migration
             }
             if (!Schema::hasColumn('assignments', 'created_by')) {
                 $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete()->after('file');
+                
             }
         });
     }

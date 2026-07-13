@@ -25,10 +25,18 @@ class LoginController extends Controller
         ]);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $request->session()->regenerate();
-            ActivityLog::log('User login', 'auth');
-            return redirect()->intended(route('dashboard'));
-        }
+    $request->session()->regenerate();
+
+    $user = Auth::user();
+
+    ActivityLog::log('User login', 'auth');
+
+    if ($user->hasRole('pimpinan') && !$user->hasRole('super_admin') ) {
+        return redirect()->route('dashboard.pimpinan');
+    }
+
+    return redirect()->route('dashboard');
+}
 
         return back()->withErrors([
             'email' => 'Email atau password salah.',

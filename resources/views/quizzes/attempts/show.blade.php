@@ -4,6 +4,25 @@
 
 @section('content')
 
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0" style="font-size:1.3rem">Hasil Attempt Quiz</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('courses.index') }}">Kelas</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('quizzes.index') }}">Quiz</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('quizzes.attempts.index', $quiz->id) }}">Attempts</a></li>
+                    <li class="breadcrumb-item active">Hasil</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="card">
     <div class="card-header">
         <h3 class="card-title">

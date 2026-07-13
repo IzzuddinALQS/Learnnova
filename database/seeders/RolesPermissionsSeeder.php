@@ -16,6 +16,7 @@ class RolesPermissionsSeeder extends Seeder
             ['name' => 'akademik',    'guard_name' => 'web', 'description' => 'Staf Akademik - kelola data administratif'],
             ['name' => 'pengajar',    'guard_name' => 'web', 'description' => 'Pengajar / Instruktur kelas'],
             ['name' => 'pelajar',     'guard_name' => 'web', 'description' => 'Pelajar / Siswa'],
+            ['name' => 'pimpinan',    'guard_name' => 'web', 'description' => 'Pimpinan - memantau statistik dan laporan akademik'],
         ];
 
         foreach ($roles as $roleData) {
@@ -154,6 +155,13 @@ class RolesPermissionsSeeder extends Seeder
             'schedules.view',
             'attendance.view',
             'announcements.view',
+        ]);
+
+        // pimpinan
+        $syncRole('pimpinan', [
+            'courses.view',
+            'reports.view',
+            'reports.export',
         ]);
     }
 }

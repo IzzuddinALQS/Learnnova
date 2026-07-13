@@ -17,17 +17,20 @@ use App\Exports\GradebookExport;
 class GradebookController extends Controller
 {
     // ── Pelajar: lihat nilai sendiri ──────────────────────────────────
-    public function index()
+    public function index(Request $request)
     {
         if (!Auth::user()->hasRole('pelajar')) {
             abort(403, 'Unauthorized action.');
         }
 
-        $student   = Auth::user();
-        $courses   = $student->enrolledCourses()->with(['assignments', 'quizzes'])->get();
+        $student        = Auth::user();
+        $allCourses     = $student->enrolledCourses()->with(['assignments', 'quizzes'])->get();
+        $selectedCourse = $request->get('course_id');
+
+        $courses   = $selectedCourse ? $allCourses->where('id', $selectedCourse) : $allCourses;
         $gradebook = $this->buildStudentGradebook($student, $courses);
 
-        return view('gradebook.index', compact('gradebook', 'courses'));
+        return view('gradebook.index', compact('gradebook', 'allCourses', 'selectedCourse'));
     }
 
     // ── Pengajar: lihat nilai semua pelajar per course ────────────────
@@ -44,10 +47,13 @@ class GradebookController extends Controller
     }
 
     // ── Export PDF Pelajar ────────────────────────────────────────────
-    public function exportPdfStudent()
+    public function exportPdfStudent(Request $request)
     {
-        $student   = Auth::user();
-        $courses   = $student->enrolledCourses()->with(['assignments', 'quizzes'])->get();
+        $student        = Auth::user();
+        $allCourses     = $student->enrolledCourses()->with(['assignments', 'quizzes'])->get();
+        $selectedCourse = $request->get('course_id');
+
+        $courses   = $selectedCourse ? $allCourses->where('id', $selectedCourse) : $allCourses;
         $gradebook = $this->buildStudentGradebook($student, $courses);
 
         $pdf = Pdf::loadView('gradebook.exports.pdf_student', compact('gradebook', 'student'))
@@ -57,10 +63,15 @@ class GradebookController extends Controller
     }
 
     // ── Export Excel Pelajar ──────────────────────────────────────────
-    public function exportExcelStudent()
+    public function exportExcelStudent(Request $request)
     {
-        $student = Auth::user();
-        return Excel::download(new GradebookExport($student), 'nilai-' . str()->slug($student->name) . '.xlsx');
+        $student        = Auth::user();
+        $selectedCourse = $request->get('course_id') ? (int) $request->get('course_id') : null;
+
+        return Excel::download(
+            new GradebookExport($student, null, null, $selectedCourse),
+            'nilai-' . str()->slug($student->name) . '.xlsx'
+        );
     }
 
     // ── Export PDF Pengajar ───────────────────────────────────────────
@@ -99,8 +110,7 @@ class GradebookController extends Controller
             $assignmentWeight = $course->assignment_weight / 100;
             $quizWeight       = $course->quiz_weight / 100;
 
-            // Nilai Tugas
-            $assignments = [];
+            $assignments          = [];
             $totalAssignmentScore = 0;
             $totalAssignmentMax   = 0;
 
@@ -113,15 +123,15 @@ class GradebookController extends Controller
                 $maxScore = $assignment->max_score;
 
                 $assignments[] = [
-                    'title'   => $assignment->title,
-                    'score'   => $score,
-                    'max'     => $maxScore,
-                    'status'  => $submission?->status ?? 'belum',
+                    'title'  => $assignment->title,
+                    'score'  => $score,
+                    'max'    => $maxScore,
+                    'status' => $submission?->status ?? 'belum',
                 ];
 
+                $totalAssignmentMax += $maxScore;
                 if ($score !== null) {
                     $totalAssignmentScore += $score;
-                    $totalAssignmentMax   += $maxScore;
                 }
             }
 
@@ -129,15 +139,14 @@ class GradebookController extends Controller
                 ? round(($totalAssignmentScore / $totalAssignmentMax) * 100, 2)
                 : null;
 
-            // Nilai Kuis
-            $quizzes = [];
+            $quizzes        = [];
             $totalQuizScore = 0;
             $totalQuizMax   = 0;
 
             foreach ($course->quizzes as $quiz) {
                 $attempt = QuizAttempt::where('quiz_id', $quiz->id)
                     ->where('student_id', $student->id)
-                    ->latest()
+                    ->orderBy('score', 'desc')
                     ->first();
 
                 $maxScore = $quiz->questions->sum('points');
@@ -150,24 +159,25 @@ class GradebookController extends Controller
                     'is_passed' => $attempt?->is_passed,
                 ];
 
+                $totalQuizMax += $maxScore;
                 if ($score !== null) {
                     $totalQuizScore += $score;
-                    $totalQuizMax   += $maxScore;
                 }
             }
 
             $avgQuiz = $totalQuizMax > 0
                 ? round(($totalQuizScore / $totalQuizMax) * 100, 2)
-                : null;
+                : (count($course->quizzes) > 0 ? 0 : null);
 
-            // Nilai Akhir
+            $avgAssignment = $totalAssignmentMax > 0
+                ? round(($totalAssignmentScore / $totalAssignmentMax) * 100, 2)
+                : (count($course->assignments) > 0 ? 0 : null);
+
             $finalScore = null;
-            if ($avgAssignment !== null && $avgQuiz !== null) {
-                $finalScore = round(($avgAssignment * $assignmentWeight) + ($avgQuiz * $quizWeight), 2);
-            } elseif ($avgAssignment !== null) {
-                $finalScore = $avgAssignment;
-            } elseif ($avgQuiz !== null) {
-                $finalScore = $avgQuiz;
+            if ($avgAssignment !== null || $avgQuiz !== null) {
+                $valAssignment = $avgAssignment ?? 0;
+                $valQuiz = $avgQuiz ?? 0;
+                $finalScore = round(($valAssignment * $assignmentWeight) + ($valQuiz * $quizWeight), 2);
             }
 
             $gradebook[] = [
@@ -186,7 +196,7 @@ class GradebookController extends Controller
     }
 
     // ── Helper: Bangun data gradebook per course ──────────────────────
-    private function buildCourseGradebook(Course $course, $students): array
+    public function buildCourseGradebook(Course $course, $students): array
     {
         $course->load(['assignments', 'quizzes.questions']);
         $assignmentWeight = $course->assignment_weight / 100;
@@ -194,8 +204,7 @@ class GradebookController extends Controller
         $gradebook        = [];
 
         foreach ($students as $student) {
-            // Nilai Tugas
-            $assignmentScores = [];
+            $assignmentScores     = [];
             $totalAssignmentScore = 0;
             $totalAssignmentMax   = 0;
 
@@ -204,12 +213,12 @@ class GradebookController extends Controller
                     ->where('student_id', $student->id)
                     ->first();
 
-                $score = $submission?->score;
+                $score              = $submission?->score;
                 $assignmentScores[] = $score;
 
+                $totalAssignmentMax += $assignment->max_score;
                 if ($score !== null) {
                     $totalAssignmentScore += $score;
-                    $totalAssignmentMax   += $assignment->max_score;
                 }
             }
 
@@ -217,48 +226,48 @@ class GradebookController extends Controller
                 ? round(($totalAssignmentScore / $totalAssignmentMax) * 100, 2)
                 : null;
 
-            // Nilai Kuis
-            $quizScores = [];
+            $quizScores     = [];
             $totalQuizScore = 0;
             $totalQuizMax   = 0;
 
             foreach ($course->quizzes as $quiz) {
                 $attempt = QuizAttempt::where('quiz_id', $quiz->id)
                     ->where('student_id', $student->id)
-                    ->latest()
+                    ->orderBy('score', 'desc')
                     ->first();
 
-                $maxScore = $quiz->questions->sum('points');
-                $score    = $attempt?->score;
+                $maxScore     = $quiz->questions->sum('points');
+                $score        = $attempt?->score;
                 $quizScores[] = $score;
 
+                $totalQuizMax += $maxScore;
                 if ($score !== null) {
                     $totalQuizScore += $score;
-                    $totalQuizMax   += $maxScore;
                 }
             }
 
             $avgQuiz = $totalQuizMax > 0
                 ? round(($totalQuizScore / $totalQuizMax) * 100, 2)
-                : null;
+                : (count($course->quizzes) > 0 ? 0 : null);
 
-            // Nilai Akhir
+            $avgAssignment = $totalAssignmentMax > 0
+                ? round(($totalAssignmentScore / $totalAssignmentMax) * 100, 2)
+                : (count($course->assignments) > 0 ? 0 : null);
+
             $finalScore = null;
-            if ($avgAssignment !== null && $avgQuiz !== null) {
-                $finalScore = round(($avgAssignment * $assignmentWeight) + ($avgQuiz * $quizWeight), 2);
-            } elseif ($avgAssignment !== null) {
-                $finalScore = $avgAssignment;
-            } elseif ($avgQuiz !== null) {
-                $finalScore = $avgQuiz;
+            if ($avgAssignment !== null || $avgQuiz !== null) {
+                $valAssignment = $avgAssignment ?? 0;
+                $valQuiz = $avgQuiz ?? 0;
+                $finalScore = round(($valAssignment * $assignmentWeight) + ($valQuiz * $quizWeight), 2);
             }
 
             $gradebook[] = [
-                'student'          => $student,
+                'student'           => $student,
                 'assignment_scores' => $assignmentScores,
                 'quiz_scores'       => $quizScores,
-                'avg_assignment'   => $avgAssignment,
-                'avg_quiz'         => $avgQuiz,
-                'final_score'      => $finalScore,
+                'avg_assignment'    => $avgAssignment,
+                'avg_quiz'          => $avgQuiz,
+                'final_score'       => $finalScore,
             ];
         }
 
@@ -275,15 +284,13 @@ class GradebookController extends Controller
         $courses  = Course::with(['assignments', 'quizzes.questions'])->get();
         $students = User::whereHas('roles', fn($q) => $q->where('name', 'pelajar'))->get();
 
-        // Statistik ringkasan
         $summary = [
-            'total_students' => $students->count(),
-            'total_courses'  => $courses->count(),
-            'total_assignments' => \App\Models\Assignment::count(),
-            'total_quizzes'     => \App\Models\Quiz::count(),
+            'total_students'    => $students->count(),
+            'total_courses'     => $courses->count(),
+            'total_assignments' => Assignment::count(),
+            'total_quizzes'     => Quiz::count(),
         ];
 
-        // Rekap per course
         $report = [];
         foreach ($courses as $course) {
             $courseStudents = User::whereHas(
@@ -292,23 +299,22 @@ class GradebookController extends Controller
                 $q->where('course_id', $course->id)->where('status', 'active')
             )->get();
 
-            $gradebook = $this->buildCourseGradebook($course, $courseStudents);
-
+            $gradebook   = $this->buildCourseGradebook($course, $courseStudents);
             $finalScores = collect($gradebook)->pluck('final_score')->filter()->values();
 
             $report[] = [
-                'course'          => $course,
-                'total_students'  => $courseStudents->count(),
-                'avg_assignment'  => collect($gradebook)->pluck('avg_assignment')->filter()->avg()
+                'course'         => $course,
+                'total_students' => $courseStudents->count(),
+                'avg_assignment' => collect($gradebook)->pluck('avg_assignment')->filter()->avg()
                     ? round(collect($gradebook)->pluck('avg_assignment')->filter()->avg(), 2)
                     : null,
-                'avg_quiz'        => collect($gradebook)->pluck('avg_quiz')->filter()->avg()
+                'avg_quiz'       => collect($gradebook)->pluck('avg_quiz')->filter()->avg()
                     ? round(collect($gradebook)->pluck('avg_quiz')->filter()->avg(), 2)
                     : null,
-                'avg_final'       => $finalScores->count() > 0
+                'avg_final'      => $finalScores->count() > 0
                     ? round($finalScores->avg(), 2)
                     : null,
-                'gradebook'       => $gradebook,
+                'gradebook'      => $gradebook,
             ];
         }
 
@@ -322,7 +328,7 @@ class GradebookController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $courses  = Course::with(['assignments', 'quizzes.questions'])->get();
+        $courses = Course::with(['assignments', 'quizzes.questions'])->get();
 
         return Excel::download(
             new \App\Exports\AcademicReportExport($courses),
@@ -343,8 +349,8 @@ class GradebookController extends Controller
         $summary = [
             'total_students'    => $students->count(),
             'total_courses'     => $courses->count(),
-            'total_assignments' => \App\Models\Assignment::count(),
-            'total_quizzes'     => \App\Models\Quiz::count(),
+            'total_assignments' => Assignment::count(),
+            'total_quizzes'     => Quiz::count(),
         ];
 
         $report = [];
@@ -378,5 +384,24 @@ class GradebookController extends Controller
             ->setPaper('a4', 'landscape');
 
         return $pdf->download('laporan-akademik-' . now()->format('d-m-Y') . '.pdf');
+    }
+
+    // ── Pengajar: pilih kelas ─────────────────────────────────────────
+    public function courses()
+    {
+        if (!Auth::user()->hasPermission('reports.view')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if (Auth::user()->hasRole('super_admin')) {
+            $courses = Course::with(['assignments', 'quizzes'])->get();
+        } else {
+            $courses = Course::with(['assignments', 'quizzes'])
+                ->where('instructor_id', Auth::id())
+                ->orWhereHas('instructors', fn($q) => $q->where('user_id', Auth::id()))
+                ->get();
+        }
+
+        return view('gradebook.courses', compact('courses'));
     }
 }

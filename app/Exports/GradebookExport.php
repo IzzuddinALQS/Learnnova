@@ -19,22 +19,21 @@ class GradebookExport implements FromCollection, WithHeadings, WithTitle, WithSt
     protected ?User   $student;
     protected ?Course $course;
     protected $students;
+    protected ?int    $courseId;
 
-    public function __construct(?User $student = null, ?Course $course = null, $students = null)
+    public function __construct(?User $student = null, ?Course $course = null, $students = null, ?int $courseId = null)
     {
         $this->student  = $student;
         $this->course   = $course;
         $this->students = $students;
+        $this->courseId = $courseId;
     }
 
     public function collection(): Collection
     {
-        // Export untuk pelajar (nilai sendiri)
         if ($this->student) {
             return $this->studentCollection();
         }
-
-        // Export untuk pengajar (semua pelajar di course)
         return $this->courseCollection();
     }
 
@@ -52,14 +51,23 @@ class GradebookExport implements FromCollection, WithHeadings, WithTitle, WithSt
             ];
         }
 
-        return [
-            'No',
-            'Nama Pelajar',
-            'Email',
-            'Rata-rata Tugas (%)',
-            'Rata-rata Kuis (%)',
-            'Nilai Akhir (%)',
-        ];
+        $headings = ['No', 'Nama Pelajar', 'Email'];
+
+        if ($this->course) {
+            $this->course->load(['assignments', 'quizzes.questions']);
+            foreach ($this->course->assignments as $assignment) {
+                $headings[] = \Str::limit($assignment->title, 15) . ' (Tugas)';
+            }
+            foreach ($this->course->quizzes as $quiz) {
+                $headings[] = \Str::limit($quiz->title, 15) . ' (Kuis)';
+            }
+        }
+
+        $headings[] = 'Rata-rata Tugas (%)';
+        $headings[] = 'Rata-rata Kuis (%)';
+        $headings[] = 'Nilai Akhir (%)';
+
+        return $headings;
     }
 
     public function title(): string
@@ -67,7 +75,6 @@ class GradebookExport implements FromCollection, WithHeadings, WithTitle, WithSt
         if ($this->student) {
             return 'Nilai ' . $this->student->name;
         }
-
         return 'Rekap Nilai ' . ($this->course->title ?? '');
     }
 
@@ -88,8 +95,12 @@ class GradebookExport implements FromCollection, WithHeadings, WithTitle, WithSt
         $rows    = collect();
         $courses = $this->student->enrolledCourses()->with(['assignments', 'quizzes.questions'])->get();
 
+        // Filter berdasarkan course_id jika ada
+        if ($this->courseId) {
+            $courses = $courses->where('id', $this->courseId);
+        }
+
         foreach ($courses as $course) {
-            // Tugas
             foreach ($course->assignments as $assignment) {
                 $submission = AssignmentSubmission::where('assignment_id', $assignment->id)
                     ->where('student_id', $this->student->id)
@@ -102,21 +113,20 @@ class GradebookExport implements FromCollection, WithHeadings, WithTitle, WithSt
                     : '-';
 
                 $rows->push([
-                    'kelas'   => $course->title,
-                    'jenis'   => 'Tugas',
-                    'judul'   => $assignment->title,
-                    'nilai'   => $score ?? '-',
-                    'max'     => $maxScore,
-                    'persen'  => $persen,
-                    'status'  => $submission?->status ?? 'Belum Dikumpulkan',
+                    'kelas'  => $course->title,
+                    'jenis'  => 'Tugas',
+                    'judul'  => $assignment->title,
+                    'nilai'  => $score ?? '-',
+                    'max'    => $maxScore,
+                    'persen' => $persen,
+                    'status' => $submission?->status ?? 'Belum Dikumpulkan',
                 ]);
             }
 
-            // Kuis
             foreach ($course->quizzes as $quiz) {
-                $attempt  = QuizAttempt::where('quiz_id', $quiz->id)
+                $attempt = QuizAttempt::where('quiz_id', $quiz->id)
                     ->where('student_id', $this->student->id)
-                    ->latest()
+                    ->orderBy('score', 'desc')
                     ->first();
 
                 $maxScore = $quiz->questions->sum('points');
@@ -151,65 +161,66 @@ class GradebookExport implements FromCollection, WithHeadings, WithTitle, WithSt
         $this->course->load(['assignments', 'quizzes.questions']);
 
         foreach ($this->students as $i => $student) {
-            // Rata-rata tugas
+            $row = [
+                'no'    => $i + 1,
+                'nama'  => $student->name,
+                'email' => $student->email,
+            ];
+
+            // Nilai per tugas
             $totalAssignmentScore = 0;
             $totalAssignmentMax   = 0;
-
             foreach ($this->course->assignments as $assignment) {
                 $submission = AssignmentSubmission::where('assignment_id', $assignment->id)
                     ->where('student_id', $student->id)
                     ->first();
-
-                if ($submission?->score !== null) {
-                    $totalAssignmentScore += $submission->score;
+                $score = $submission?->score;
+                $row[] = $score ?? '-';
+                if ($score !== null) {
+                    $totalAssignmentScore += $score;
                     $totalAssignmentMax   += $assignment->max_score;
+                }
+            }
+
+            // Nilai per kuis
+            $totalQuizScore = 0;
+            $totalQuizMax   = 0;
+            foreach ($this->course->quizzes as $quiz) {
+                $attempt = QuizAttempt::where('quiz_id', $quiz->id)
+                    ->where('student_id', $student->id)
+                    ->orderBy('score', 'desc')
+                    ->first();
+                $maxScore = $quiz->questions->sum('points');
+                $score    = $attempt?->score;
+                $row[]    = $score ?? '-';
+                if ($score !== null) {
+                    $totalQuizScore += $score;
+                    $totalQuizMax   += $maxScore;
                 }
             }
 
             $avgAssignment = $totalAssignmentMax > 0
                 ? round(($totalAssignmentScore / $totalAssignmentMax) * 100, 2)
-                : '-';
-
-            // Rata-rata kuis
-            $totalQuizScore = 0;
-            $totalQuizMax   = 0;
-
-            foreach ($this->course->quizzes as $quiz) {
-                $attempt  = QuizAttempt::where('quiz_id', $quiz->id)
-                    ->where('student_id', $student->id)
-                    ->latest()
-                    ->first();
-
-                $maxScore = $quiz->questions->sum('points');
-
-                if ($attempt?->score !== null) {
-                    $totalQuizScore += $attempt->score;
-                    $totalQuizMax   += $maxScore;
-                }
-            }
+                : null;
 
             $avgQuiz = $totalQuizMax > 0
                 ? round(($totalQuizScore / $totalQuizMax) * 100, 2)
-                : '-';
+                : null;
 
-            // Nilai akhir
-            $finalScore = '-';
-            if ($avgAssignment !== '-' && $avgQuiz !== '-') {
+            $finalScore = null;
+            if ($avgAssignment !== null && $avgQuiz !== null) {
                 $finalScore = round(($avgAssignment * $assignmentWeight) + ($avgQuiz * $quizWeight), 2);
-            } elseif ($avgAssignment !== '-') {
+            } elseif ($avgAssignment !== null) {
                 $finalScore = $avgAssignment;
-            } elseif ($avgQuiz !== '-') {
+            } elseif ($avgQuiz !== null) {
                 $finalScore = $avgQuiz;
             }
 
-            $rows->push([
-                'no'             => $i + 1,
-                'nama'           => $student->name,
-                'email'          => $student->email,
-                'avg_assignment' => $avgAssignment !== '-' ? $avgAssignment . '%' : '-',
-                'avg_quiz'       => $avgQuiz !== '-' ? $avgQuiz . '%' : '-',
-                'final_score'    => $finalScore !== '-' ? $finalScore . '%' : '-',
-            ]);
+            $row[] = $avgAssignment !== null ? $avgAssignment . '%' : '-';
+            $row[] = $avgQuiz !== null ? $avgQuiz . '%' : '-';
+            $row[] = $finalScore !== null ? $finalScore . '%' : '-';
+
+            $rows->push($row);
         }
 
         return $rows;

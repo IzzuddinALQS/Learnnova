@@ -35,6 +35,12 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('admin123'),
                 'is_active' => 1,
             ],
+            [
+                'name'     => 'Pimpinan',
+                'email'    => 'pimpinan@gmail.com',
+                'password' => Hash::make('admin123'),
+                'is_active' => 1,
+            ],
         ];
 
         foreach ($users as $user) {
@@ -45,12 +51,13 @@ class UserSeeder extends Seeder
         }
 
         // Assign role ke masing-masing user
-        // role_id: 1=super_admin, 2=akademik, 3=pengajar, 4=pelajar
+        // role_id: 1=super_admin, 2=akademik, 3=pengajar, 4=pelajar, 5=pimpinan
         $assignments = [
             ['model_id' => 1, 'role_id' => 1], // superadmin
             ['model_id' => 2, 'role_id' => 2], // akademik
             ['model_id' => 3, 'role_id' => 3], // pengajar
             ['model_id' => 4, 'role_id' => 4], // pelajar
+            ['model_id' => 5, 'role_id' => 5], // pimpinan
         ];
 
         foreach ($assignments as $assign) {

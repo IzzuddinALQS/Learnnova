@@ -175,12 +175,36 @@ class QuizAttemptController extends Controller
             ->findOrFail($attempt);
 
         $validated = $request->validate([
-            'score' => 'required|numeric|min:0',
+            'answers_points' => 'required|array',
+            'answers_points.*' => 'required|numeric|min:0',
             'is_passed' => 'required|in:0,1',
         ]);
 
+        $answers = QuizAnswer::with('question')
+            ->where('attempt_id', $attempt->id)
+            ->get();
+
+        $totalScore = 0;
+        foreach ($answers as $answer) {
+            $points = $answer->points_earned;
+            if (isset($validated['answers_points'][$answer->id])) {
+                $points = floatval($validated['answers_points'][$answer->id]);
+                $maxPoints = floatval($answer->question->points);
+                if ($points > $maxPoints) {
+                    $points = $maxPoints;
+                }
+
+                $isCorrect = $points > 0;
+                $answer->update([
+                    'points_earned' => $points,
+                    'is_correct' => $isCorrect,
+                ]);
+            }
+            $totalScore += $points;
+        }
+
         $attempt->update([
-            'score' => $validated['score'],
+            'score' => $totalScore,
             'is_passed' => $validated['is_passed'] === '1',
         ]);
 

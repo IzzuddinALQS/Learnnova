@@ -57,7 +57,6 @@ class EnrollmentController extends Controller
 
         $added = 0;
         foreach ($request->student_ids as $studentId) {
-            // Cegah duplikat
             $exists = Enrollment::where('course_id', $course->id)
                 ->where('student_id', $studentId)
                 ->exists();
