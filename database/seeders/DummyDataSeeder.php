@@ -11,6 +11,7 @@ use App\Models\Assignment;
 use App\Models\Quiz;
 use App\Models\QuizQuestion;
 use App\Models\QuizOption;
+use App\Models\Schedule;
 use Illuminate\Support\Facades\DB;
 use Faker\Factory as Faker;
 
@@ -96,6 +97,12 @@ class DummyDataSeeder extends Seeder
                     'is_correct' => true
                 ]);
             }
+
+            // Schedule
+            Schedule::factory()->count(2)->create([
+                'course_id' => $course->id,
+                'user_id' => $course->instructor_id
+            ]);
 
             // Enroll 5-10 random students to this course
             $enrolledStudents = $faker->randomElements($students, $faker->numberBetween(5, 10));
