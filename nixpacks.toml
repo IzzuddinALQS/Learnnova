@@ -1,8 +1,0 @@
-[providers]
-  nixpacks = ["php"]
-
-[variables]
-  NIXPACKS_PHP_VERSION = "8.4"
-
-[phases.setup]
-  nixPkgs = ["...", "php84Packages.composer", "php84Extensions.gd"]
